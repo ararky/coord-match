@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>コーデ&マッチ</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #F5F4F0;
+    --surface: #FFFFFF;
+    --ink: #0E0E12;
+    --sub: #6B6B75;
+    --line: rgba(14,14,18,0.10);
+    --line-soft: rgba(14,14,18,0.06);
+    --a1: #6D5EF6;   /* iris */
+    --a2: #C24BF5;   /* violet */
+    --lime: #C9F24E;
+    --grad: linear-gradient(115deg, var(--a1), var(--a2));
+    --shadow: 0 1px 2px rgba(14,14,18,0.04), 0 12px 30px -12px rgba(14,14,18,0.16);
+    --mono: ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--sans);
+    overflow-x: hidden; -webkit-font-smoothing: antialiased; line-height: 1.5;
+  }
+  /* ambient gradient blobs */
+  body::before, body::after {
+    content: ''; position: fixed; z-index: -1; border-radius: 50%; filter: blur(70px); opacity: 0.28; pointer-events: none;
+  }
+  body::before { width: 44vw; height: 44vw; top: -12vw; right: -12vw; background: radial-gradient(circle, var(--a2), transparent 70%); }
+  body::after  { width: 40vw; height: 40vw; bottom: -14vw; left: -12vw; background: radial-gradient(circle, var(--a1), transparent 70%); }
+
+  .wrap { max-width: 660px; margin: 0 auto; padding: 1.5rem 1.2rem 5rem; }
+
+  /* ---- hero ---- */
+  header.hero { padding: 2.2rem 0 1.5rem; }
+  .kicker { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--sub); display: inline-flex; align-items: center; gap: 0.5rem; }
+  .kicker .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--grad); }
+  h1 { font-size: clamp(2.6rem, 12vw, 4.2rem); font-weight: 860; letter-spacing: -0.045em; line-height: 0.94; margin: 0.7rem 0 0; }
+  h1 .g { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lede { font-size: 0.9rem; color: var(--sub); margin-top: 0.9rem; max-width: 30rem; line-height: 1.65; }
+  .lede b { color: var(--ink); font-weight: 650; }
+
+  /* ---- card ---- */
+  .card { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 22px;
+    padding: 1.25rem 1.2rem; margin-top: 1.1rem; box-shadow: var(--shadow); }
+  .step { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--sub); display: flex; align-items: center; gap: 0.55rem; margin-bottom: 0.85rem; }
+  .step .n { width: 1.5rem; height: 1.5rem; border-radius: 8px; background: var(--ink); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.72rem; }
+  .step .n.grad { background: var(--grad); }
+
+  /* inputs */
+  input[type=password], input[type=text] {
+    width: 100%; font-family: var(--sans); font-size: 0.92rem; padding: 0.8rem 0.9rem;
+    border: 1px solid var(--line); border-radius: 13px; background: #fff; color: var(--ink);
+  }
+  input:focus { outline: none; border-color: var(--a1); box-shadow: 0 0 0 3px rgba(109,94,246,0.15); }
+  .key-row { display: flex; gap: 0.55rem; }
+  .key-row input { flex: 1; }
+  .hint { font-size: 0.74rem; color: var(--sub); margin-top: 0.6rem; line-height: 1.6; }
+  .hint b { color: var(--ink); }
+  .link { color: var(--a1); text-decoration: none; border-bottom: 1px solid rgba(109,94,246,0.35); cursor: pointer; }
+  .key-ok { font-size: 0.82rem; color: var(--ink); font-weight: 650; display: flex; align-items: center; gap: 0.45rem; }
+  .key-ok::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #22C55E; }
+  .mini-link { font-size: 0.76rem; color: var(--sub); text-decoration: underline; cursor: pointer; margin-left: 0.6rem; }
+
+  /* buttons */
+  .btn { font-family: var(--sans); font-size: 0.98rem; font-weight: 700; letter-spacing: 0.01em;
+    padding: 0.9rem 1.2rem; border-radius: 14px; border: none; cursor: pointer; transition: transform 0.12s, box-shadow 0.2s; }
+  .btn:active { transform: scale(0.98); }
+  .btn.solid { background: var(--ink); color: #fff; }
+  .btn.grad { background: var(--grad); color: #fff; width: 100%; margin-top: 1rem;
+    box-shadow: 0 8px 22px -8px rgba(109,94,246,0.7); }
+  .btn.grad:disabled { opacity: 0.35; box-shadow: none; cursor: default; }
+  .btn.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); width: 100%; margin-top: 0.9rem; }
+  .btn.sm { padding: 0.8rem 1.1rem; }
+
+  /* style selector */
+  .styles { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+  .style { font-family: var(--sans); font-size: 0.84rem; font-weight: 600; padding: 0.55rem 0.9rem;
+    border-radius: 11px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; transition: 0.14s; }
+  .style .em { display: block; font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.1em; color: var(--sub);
+    text-transform: uppercase; margin-top: 0.1rem; }
+  .style.on { border-color: transparent; background: var(--ink); color: #fff; }
+  .style.on .em { color: rgba(255,255,255,0.6); }
+
+  /* upload */
+  .drop { border: 1.5px dashed var(--line); border-radius: 16px; padding: 1.6rem 1rem; text-align: center;
+    cursor: pointer; transition: 0.15s; background: #fff; }
+  .drop.over, .drop:active { border-color: var(--a1); background: #faf9ff; }
+  .drop .ic { font-size: 1.5rem; }
+  .drop .big { font-weight: 700; font-size: 0.95rem; margin-top: 0.35rem; }
+  .drop .sub { font-size: 0.76rem; color: var(--sub); margin-top: 0.25rem; }
+  .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 0.5rem; margin-top: 0.9rem; }
+  .thumb { position: relative; aspect-ratio: 3/4; border-radius: 12px; overflow: hidden; border: 1px solid var(--line-soft); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb .idx { position: absolute; left: 5px; bottom: 5px; font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+    background: rgba(14,14,18,0.72); color: #fff; padding: 0.05rem 0.35rem; border-radius: 5px; }
+  .thumb .x { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 7px; border: none;
+    background: rgba(14,14,18,0.78); color: #fff; font-size: 13px; line-height: 20px; cursor: pointer; }
+
+  .row-between { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; margin-top: 0.9rem; }
+  .toggle { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; color: var(--sub); cursor: pointer; user-select: none; }
+  .toggle input { display: none; }
+  .toggle .track { width: 38px; height: 22px; border-radius: 20px; background: var(--line); position: relative; transition: 0.15s; }
+  .toggle .track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25); transition: 0.15s; }
+  .toggle input:checked + .track { background: var(--a1); }
+  .toggle input:checked + .track::after { transform: translateX(16px); }
+
+  /* loading */
+  #loading { display: none; text-align: center; padding: 3rem 0; }
+  #loading.on { display: block; }
+  .loader { width: 40px; height: 40px; margin: 0 auto 1.1rem; border-radius: 50%;
+    background: conic-gradient(var(--a1), var(--a2), transparent 75%); -webkit-mask: radial-gradient(farthest-side, transparent 60%, #000 62%);
+    mask: radial-gradient(farthest-side, transparent 60%, #000 62%); animation: sp 0.9s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  #loadmsg { font-size: 0.86rem; color: var(--sub); }
+
+  /* results */
+  #results { display: none; }
+  #results.on { display: block; }
+  .items-wrap { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .chip { font-size: 0.76rem; padding: 0.35rem 0.7rem; border-radius: 10px; background: #fff; border: 1px solid var(--line-soft); }
+  .chip b { color: var(--a1); }
+
+  .look { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 22px; overflow: hidden;
+    margin-top: 1rem; box-shadow: var(--shadow); }
+  .look-head { padding: 1.1rem 1.15rem 0.9rem; }
+  .look-scene { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase;
+    color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text; font-weight: 700; }
+  .look-title { font-size: 1.5rem; font-weight: 780; letter-spacing: -0.02em; margin-top: 0.2rem; line-height: 1.1; }
+  .board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 0 4px; }
+  .board .tile { position: relative; aspect-ratio: 3/4; overflow: hidden; background: #f0eff4; }
+  .board .tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .board .tile .no { position: absolute; left: 4px; top: 4px; font-family: var(--mono); font-size: 0.55rem;
+    background: rgba(14,14,18,0.7); color: #fff; padding: 0.02rem 0.28rem; border-radius: 4px; }
+  .board .tile.add { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    background: repeating-linear-gradient(45deg, #faf9ff, #faf9ff 8px, #f3f1fb 8px, #f3f1fb 16px);
+    border: 1px dashed rgba(109,94,246,0.5); padding: 0.3rem; }
+  .board .tile.add .plus { font-size: 1rem; color: var(--a1); font-weight: 700; }
+  .board .tile.add .lbl { font-size: 0.62rem; color: var(--a1); line-height: 1.25; margin-top: 0.15rem; }
+  .look-body { padding: 0.95rem 1.15rem 1.2rem; }
+  .look-comment { font-size: 0.92rem; line-height: 1.7; color: var(--ink); }
+  .look-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.85rem; }
+  .tag { font-size: 0.72rem; padding: 0.25rem 0.6rem; border-radius: 8px; background: #f4f3f9; color: var(--sub); }
+  .tag.add { background: rgba(109,94,246,0.1); color: var(--a1); font-weight: 600; }
+
+  .err { font-size: 0.82rem; color: #B4231C; background: #FDECEA; border: 1px solid #F6C9C5;
+    border-radius: 12px; padding: 0.75rem 0.9rem; margin-top: 0.9rem; line-height: 1.6; display: none; }
+  .err.on { display: block; }
+
+  footer { text-align: center; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.06em; color: var(--sub);
+    margin-top: 2.4rem; line-height: 1.9; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="kicker"><span class="dot"></span> AI PERSONAL STYLIST · 2026</span>
+    <h1>コーデ<span class="g">&</span>マッチ</h1>
+    <p class="lede">手持ちの服を撮るだけ。あなたの服を主役に、選んだテイストで<b>ルックを組み直して</b>、足りない一枚まで提案します。</p>
+  </header>
+
+  <!-- STEP 1 : API key -->
+  <div class="card" id="sec-key">
+    <div class="step"><span class="n">1</span> APIキー（初回のみ）</div>
+    <div id="key-set" class="key-row">
+      <input type="password" id="apikey" placeholder="sk-ant-… を貼り付け" autocomplete="off">
+      <button class="btn solid sm" onclick="saveKey()">保存</button>
+    </div>
+    <div id="key-done" style="display:none">
+      <span class="key-ok">キーを保存済み（この端末のブラウザ内のみ）</span>
+      <span class="mini-link" onclick="clearKey()">変更</span>
+    </div>
+    <p class="hint">キーは <b>あなたのブラウザ内だけ</b>に保存され、Anthropicへ直接送信されます（サーバー非経由）。<span class="link" onclick="window.open('https://console.anthropic.com/settings/keys','_blank')">console.anthropic.com</span> で発行。</p>
+  </div>
+
+  <!-- STEP 2 : style + upload -->
+  <div class="card" id="sec-up">
+    <div class="step"><span class="n">2</span> テイストを選ぶ</div>
+    <div class="styles" id="styles"></div>
+
+    <div class="step" style="margin-top:1.3rem"><span class="n">3</span> 手持ちの服をアップ</div>
+    <div class="drop" id="drop" onclick="document.getElementById('file').click()">
+      <div class="ic">📷</div>
+      <div class="big">タップして写真を選ぶ</div>
+      <div class="sub">トップス・パンツ・靴・小物など。複数枚OK（最大8枚）</div>
+    </div>
+    <input type="file" id="file" accept="image/*" multiple style="display:none">
+    <div class="thumbs" id="thumbs"></div>
+
+    <input type="text" id="note" placeholder="好みメモ（任意）例：ネイビー多め／ローファー持ってる" style="margin-top:0.9rem">
+
+    <div class="row-between">
+      <label class="toggle">
+        <input type="checkbox" id="eco"><span class="track"></span>
+        <span>省コストモード（Haiku・少し軽量）</span>
+      </label>
+    </div>
+
+    <button class="btn grad" id="go" onclick="analyze()" disabled>ルックを組んでもらう</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <!-- loading -->
+  <div id="loading">
+    <div class="loader"></div>
+    <div id="loadmsg">手持ちを解析中…</div>
+  </div>
+
+  <!-- results -->
+  <div id="results">
+    <div class="card">
+      <div class="step"><span class="n">◆</span> あなたのアイテム</div>
+      <div class="items-wrap" id="items"></div>
+    </div>
+    <div class="step" style="margin:1.6rem 0 0.2rem"><span class="n grad">◆</span> <span id="res-style-label">提案</span></div>
+    <div id="looks"></div>
+    <button class="btn ghost" onclick="reset()">別の服・テイストでもう一度</button>
+  </div>
+
+  <footer>Powered by Claude · Photos & key never leave your device</footer>
+</div>
+
+<script>
+const KEY_LS = 'coordmatch_apikey';
+let files = [];        // {b64, mediaType, url}
+let styleKey = 'ivy';
+
+/* ---------- styles ---------- */
+const STYLES = {
+  ivy:     { label: 'アイビー',   em: 'IVY / PREPPY',
+    persona: 'アイビー／プレッピー（オックスフォードBDシャツ、レジメンタルタイ、シェットランドニット、チノ／グレーフラノ、ブレザー、ローファー、ネイビー×オフホワイト×カレッジカラー、きちんと感の中の少しの砕け）' },
+  kireime: { label: 'きれいめ',   em: 'CLEAN / MINIMAL',
+    persona: 'きれいめ大人カジュアル（上質な無地、ジャストサイズ、ニュートラルカラー、とろみ素材、ミニマルで清潔感のある都会的な着こなし）' },
+  vintage: { label: '古着MIX',    em: 'VINTAGE / THRIFT',
+    persona: '古着MIX（70s〜90sのビンテージ、色や柄の効かせ、レイヤード、程よい抜けとサイズ感の遊び、一点投入で今っぽく）' },
+  mode:    { label: 'モード',     em: 'MODE / AVANT',
+    persona: 'モード（モノトーン中心、建築的なシルエット、ロング丈やレイヤー、素材コントラスト、シャープで洗練された都会的アバンギャルド）' },
+  street:  { label: 'ストリート', em: 'STREET',
+    persona: 'ストリート（オーバーサイズ、スニーカー主役、スウェット／カーゴ、ロゴやグラフィック、こなれたリラックス感とバランス）' },
+  french:  { label: 'フレンチ',   em: 'FRENCH CASUAL',
+    persona: 'フレンチカジュアル（マリニエール、デニム、トレンチ、抜け感のあるパリジェンヌ的な着こなし、力の抜けた上品さ）' }
+};
+function renderStyles(){
+  document.getElementById('styles').innerHTML = Object.entries(STYLES).map(([k,s]) =>
+    `<button class="style ${k===styleKey?'on':''}" onclick="pickStyle('${k}')">${s.label}<span class="em">${s.em}</span></button>`).join('');
+}
+function pickStyle(k){ styleKey = k; renderStyles(); }
+
+/* ---------- api key ---------- */
+function refreshKeyUI(){
+  const k = localStorage.getItem(KEY_LS);
+  document.getElementById('key-set').style.display = k ? 'none' : 'flex';
+  document.getElementById('key-done').style.display = k ? 'block' : 'none';
+}
+function saveKey(){
+  const v = document.getElementById('apikey').value.trim();
+  if(!v) return;
+  localStorage.setItem(KEY_LS, v);
+  document.getElementById('apikey').value = '';
+  refreshKeyUI();
+}
+function clearKey(){ localStorage.removeItem(KEY_LS); refreshKeyUI(); }
+
+/* ---------- upload ---------- */
+const drop = document.getElementById('drop');
+document.getElementById('file').addEventListener('change', e => handleFiles(e.target.files));
+['dragover','dragenter'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
+
+async function handleFiles(list){
+  for(const f of list){
+    if(files.length >= 8) break;
+    if(!f.type.startsWith('image/')) continue;
+    const b64 = await resizeToB64(f, 1024);
+    files.push({ b64, mediaType: 'image/jpeg', url: 'data:image/jpeg;base64,' + b64 });
+  }
+  renderThumbs();
+}
+function renderThumbs(){
+  document.getElementById('thumbs').innerHTML = files.map((f,i) =>
+    `<div class="thumb"><img src="${f.url}"><span class="idx">${i+1}</span><button class="x" onclick="removeFile(${i})">×</button></div>`).join('');
+  document.getElementById('go').disabled = files.length === 0;
+}
+function removeFile(i){ files.splice(i,1); renderThumbs(); }
+function resizeToB64(file, max){
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, max / Math.max(img.width, img.height));
+      const w = Math.round(img.width * s), h = Math.round(img.height * s);
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      res(c.toDataURL('image/jpeg', 0.85).split(',')[1]);
+    };
+    img.onerror = rej;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+/* ---------- analyze ---------- */
+const SCHEMA = {
+  type: 'object',
+  properties: {
+    items: { type: 'array', items: { type: 'object', properties: {
+      name: { type: 'string' }, category: { type: 'string' }, color: { type: 'string' }
+    }, required: ['name','category','color'], additionalProperties: false } },
+    coordinates: { type: 'array', items: { type: 'object', properties: {
+      title: { type: 'string' },
+      scene: { type: 'string' },
+      use: { type: 'array', items: { type: 'string' } },
+      use_indexes: { type: 'array', items: { type: 'integer' } },
+      add: { type: 'array', items: { type: 'string' } },
+      comment: { type: 'string' }
+    }, required: ['title','scene','use','use_indexes','add','comment'], additionalProperties: false } }
+  },
+  required: ['items','coordinates'], additionalProperties: false
+};
+
+function buildSystem(){
+  const s = STYLES[styleKey];
+  return `あなたは"${s.persona}"を専門とする一流スタイリストです。この美学を深く理解しています。
+ユーザーの手持ち服の写真（順に1番からN番まで番号付き）を見て、それらを主役にした「${s.label}」のコーディネートを日本語で提案します。
+- 提案は2〜3パターン。それぞれ違うシーンを想定（sceneは英語の短いラベル、例：WEEKEND / CLEAN OFFICE / NIGHT OUT）。
+- use には各コーデで使う手持ちアイテム名、use_indexes にはそのアイテムに対応する写真番号（1始まりの整数）を必ず入れる。
+- 足りない定番アイテムがあれば add に具体名で（例："ネイビーのローファー"）。手持ちだけで十分なら add は空配列。
+- comment は審美眼のある一言。褒めるだけでなく、そのテイストらしい着崩し方や理由を添える。`;
+}
+
+async function analyze(){
+  const key = localStorage.getItem(KEY_LS);
+  const errEl = document.getElementById('err'); errEl.classList.remove('on');
+  if(!key){ showErr('先に①APIキーを保存してください。'); return; }
+  if(files.length === 0) return;
+
+  document.getElementById('sec-up').style.display = 'none';
+  document.getElementById('sec-key').style.display = 'none';
+  document.getElementById('loading').classList.add('on');
+  document.getElementById('loadmsg').textContent = STYLES[styleKey].label + 'で組んでいます…';
+
+  const note = document.getElementById('note').value.trim();
+  const model = document.getElementById('eco').checked ? 'claude-haiku-4-5' : 'claude-opus-4-8';
+  const userText = `これは私の手持ちアイテムの写真です（${files.length}枚、順に1〜${files.length}番）。これらを主役にした「${STYLES[styleKey].label}」のコーディネートを提案してください。`
+    + (note ? `\n好みメモ：${note}` : '');
+
+  const content = files.map(f => ({ type: 'image', source: { type: 'base64', media_type: f.mediaType, data: f.b64 } }));
+  content.push({ type: 'text', text: userText });
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 4000,
+        system: buildSystem(),
+        output_config: { format: { type: 'json_schema', schema: SCHEMA } },
+        messages: [{ role: 'user', content }]
+      })
+    });
+    if(!resp.ok){ throw new Error(`APIエラー (${resp.status})：${(await resp.text()).slice(0,200)}`); }
+    const data = await resp.json();
+    if(data.stop_reason === 'refusal'){ throw new Error('この画像では提案を作れませんでした。別の服の写真でお試しください。'); }
+    const textBlock = (data.content || []).find(b => b.type === 'text');
+    if(!textBlock){ throw new Error('応答を解析できませんでした。もう一度お試しください。'); }
+    renderResults(JSON.parse(textBlock.text));
+  } catch(e){
+    document.getElementById('loading').classList.remove('on');
+    document.getElementById('sec-up').style.display = 'block';
+    document.getElementById('sec-key').style.display = 'block';
+    showErr(e.message || String(e));
+  }
+}
+function showErr(m){ const e = document.getElementById('err'); e.textContent = m; e.classList.add('on'); }
+
+function renderResults(d){
+  document.getElementById('loading').classList.remove('on');
+  document.getElementById('res-style-label').textContent = STYLES[styleKey].label + ' の提案';
+
+  document.getElementById('items').innerHTML = (d.items || []).map(it =>
+    `<span class="chip"><b>${esc(it.category)}</b> ${esc(it.name)}・${esc(it.color)}</span>`).join('');
+
+  document.getElementById('looks').innerHTML = (d.coordinates || []).map(c => {
+    const idxs = (c.use_indexes || []).filter(n => n >= 1 && n <= files.length);
+    const photoTiles = idxs.map(n =>
+      `<div class="tile"><img src="${files[n-1].url}"><span class="no">${n}</span></div>`).join('');
+    const addTiles = (c.add || []).map(a =>
+      `<div class="tile add"><span class="plus">＋</span><span class="lbl">${esc(a)}</span></div>`).join('');
+    const tags = (c.use || []).map(u => `<span class="tag">${esc(u)}</span>`).join('')
+      + (c.add || []).map(a => `<span class="tag add">＋${esc(a)}</span>`).join('');
+    return `<div class="look">
+      <div class="look-head">
+        <div class="look-scene">${esc(c.scene)}</div>
+        <div class="look-title">${esc(c.title)}</div>
+      </div>
+      <div class="board">${photoTiles}${addTiles}</div>
+      <div class="look-body">
+        <p class="look-comment">${esc(c.comment)}</p>
+        <div class="look-tags">${tags}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('results').classList.add('on');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+function reset(){
+  files = []; renderThumbs();
+  document.getElementById('note').value = '';
+  document.getElementById('results').classList.remove('on');
+  document.getElementById('sec-up').style.display = 'block';
+  document.getElementById('sec-key').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+renderStyles();
+refreshKeyUI();
+</script>
+</body>
+</html>
