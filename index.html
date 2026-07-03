@@ -3,251 +3,218 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>コーデ&マッチ</title>
+<title>Match My Fit — この服、似合う？</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
-    --bg: #F5F4F0;
-    --surface: #FFFFFF;
-    --ink: #0E0E12;
-    --sub: #6B6B75;
-    --line: rgba(14,14,18,0.10);
-    --line-soft: rgba(14,14,18,0.06);
-    --a1: #6D5EF6;   /* iris */
-    --a2: #C24BF5;   /* violet */
-    --lime: #C9F24E;
-    --grad: linear-gradient(115deg, var(--a1), var(--a2));
+    --bg: #F5F4F0; --surface: #FFFFFF; --ink: #0E0E12; --sub: #6B6B75;
+    --line: rgba(14,14,18,0.10); --line-soft: rgba(14,14,18,0.06);
+    --a1: #6D5EF6; --a2: #C24BF5; --grad: linear-gradient(115deg, var(--a1), var(--a2));
     --shadow: 0 1px 2px rgba(14,14,18,0.04), 0 12px 30px -12px rgba(14,14,18,0.16);
     --mono: ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, monospace;
     --sans: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
   }
   html, body { height: 100%; }
-  body {
-    background: var(--bg); color: var(--ink); font-family: var(--sans);
-    overflow-x: hidden; -webkit-font-smoothing: antialiased; line-height: 1.5;
-  }
-  /* ambient gradient blobs */
-  body::before, body::after {
-    content: ''; position: fixed; z-index: -1; border-radius: 50%; filter: blur(70px); opacity: 0.28; pointer-events: none;
-  }
-  body::before { width: 44vw; height: 44vw; top: -12vw; right: -12vw; background: radial-gradient(circle, var(--a2), transparent 70%); }
-  body::after  { width: 40vw; height: 40vw; bottom: -14vw; left: -12vw; background: radial-gradient(circle, var(--a1), transparent 70%); }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); overflow-x: hidden;
+    -webkit-font-smoothing: antialiased; line-height: 1.5; }
+  body::before, body::after { content:''; position:fixed; z-index:-1; border-radius:50%; filter:blur(80px); opacity:.26; pointer-events:none; }
+  body::before { width:40vw; height:40vw; top:-10vw; right:-8vw; background:radial-gradient(circle,var(--a2),transparent 70%); }
+  body::after  { width:36vw; height:36vw; bottom:-12vw; left:-8vw; background:radial-gradient(circle,var(--a1),transparent 70%); }
 
-  .wrap { max-width: 660px; margin: 0 auto; padding: 1.5rem 1.2rem 5rem; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 1.6rem 1.4rem 5rem; }
+  .stack { max-width: 720px; margin: 0 auto; }
 
-  /* ---- hero ---- */
-  header.hero { padding: 2.2rem 0 1.5rem; }
-  .kicker { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.22em; text-transform: uppercase;
-    color: var(--sub); display: inline-flex; align-items: center; gap: 0.5rem; }
-  .kicker .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--grad); }
-  h1 { font-size: clamp(2.6rem, 12vw, 4.2rem); font-weight: 860; letter-spacing: -0.045em; line-height: 0.94; margin: 0.7rem 0 0; }
-  h1 .g { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .lede { font-size: 0.9rem; color: var(--sub); margin-top: 0.9rem; max-width: 30rem; line-height: 1.65; }
+  header.hero { padding: 2.2rem 0 1.5rem; text-align: center; }
+  .kicker { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--sub);
+    display: inline-flex; align-items: center; gap: 0.5rem; }
+  .kicker .dot { width:7px; height:7px; border-radius:50%; background: var(--grad); }
+  h1 { font-size: clamp(3rem, 9vw, 5.4rem); font-weight: 850; letter-spacing: -0.04em; line-height: 0.92; margin: 0.7rem 0 0; }
+  h1 .g { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; font-style: italic; }
+  .lede { font-size: 0.94rem; color: var(--sub); margin: 1rem auto 0; max-width: 34rem; line-height: 1.65; }
   .lede b { color: var(--ink); font-weight: 650; }
+  .disclaimer { display: block; font-size: 0.74rem; color: var(--sub); margin-top: 0.7rem; line-height: 1.6; }
 
-  /* ---- card ---- */
-  .card { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 22px;
-    padding: 1.25rem 1.2rem; margin-top: 1.1rem; box-shadow: var(--shadow); }
-  .step { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.16em; text-transform: uppercase;
-    color: var(--sub); display: flex; align-items: center; gap: 0.55rem; margin-bottom: 0.85rem; }
-  .step .n { width: 1.5rem; height: 1.5rem; border-radius: 8px; background: var(--ink); color: #fff;
-    display: inline-flex; align-items: center; justify-content: center; font-size: 0.72rem; }
+  .card { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 22px; padding: 1.3rem 1.3rem; margin-top: 1.1rem; box-shadow: var(--shadow); }
+  .step { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--sub); display: flex; align-items: center; gap: 0.55rem; margin-bottom: 0.85rem; }
+  .step .n { width: 1.5rem; height: 1.5rem; border-radius: 8px; background: var(--ink); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 0.72rem; }
   .step .n.grad { background: var(--grad); }
 
-  /* inputs */
-  input[type=password], input[type=text] {
-    width: 100%; font-family: var(--sans); font-size: 0.92rem; padding: 0.8rem 0.9rem;
-    border: 1px solid var(--line); border-radius: 13px; background: #fff; color: var(--ink);
-  }
+  input[type=password], input[type=text] { width: 100%; font-family: var(--sans); font-size: 0.92rem; padding: 0.8rem 0.9rem; border: 1px solid var(--line); border-radius: 13px; background: #fff; color: var(--ink); }
   input:focus { outline: none; border-color: var(--a1); box-shadow: 0 0 0 3px rgba(109,94,246,0.15); }
-  .key-row { display: flex; gap: 0.55rem; }
-  .key-row input { flex: 1; }
-  .hint { font-size: 0.74rem; color: var(--sub); margin-top: 0.6rem; line-height: 1.6; }
-  .hint b { color: var(--ink); }
+  .key-row { display: flex; gap: 0.55rem; } .key-row input { flex: 1; }
+  .keylabel { font-size: 0.78rem; font-weight: 650; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.5rem; }
+  .kstat { font-size: 0.72rem; font-weight: 600; color: #22C55E; }
+  .kstat .ml { color: var(--sub); text-decoration: underline; cursor: pointer; margin-left: 0.4rem; font-weight: 500; }
+  .keyfield + .keyfield { margin-top: 0.9rem; padding-top: 0.9rem; border-top: 1px solid var(--line-soft); }
+  .hint { font-size: 0.74rem; color: var(--sub); margin-top: 0.7rem; line-height: 1.6; } .hint b { color: var(--ink); }
   .link { color: var(--a1); text-decoration: none; border-bottom: 1px solid rgba(109,94,246,0.35); cursor: pointer; }
-  .key-ok { font-size: 0.82rem; color: var(--ink); font-weight: 650; display: flex; align-items: center; gap: 0.45rem; }
-  .key-ok::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #22C55E; }
-  .mini-link { font-size: 0.76rem; color: var(--sub); text-decoration: underline; cursor: pointer; margin-left: 0.6rem; }
 
-  /* buttons */
-  .btn { font-family: var(--sans); font-size: 0.98rem; font-weight: 700; letter-spacing: 0.01em;
-    padding: 0.9rem 1.2rem; border-radius: 14px; border: none; cursor: pointer; transition: transform 0.12s, box-shadow 0.2s; }
+  .btn { font-family: var(--sans); font-size: 0.98rem; font-weight: 700; padding: 0.9rem 1.2rem; border-radius: 14px; border: none; cursor: pointer; transition: transform 0.12s, box-shadow 0.2s; }
   .btn:active { transform: scale(0.98); }
   .btn.solid { background: var(--ink); color: #fff; }
-  .btn.grad { background: var(--grad); color: #fff; width: 100%; margin-top: 1rem;
-    box-shadow: 0 8px 22px -8px rgba(109,94,246,0.7); }
+  .btn.grad { background: var(--grad); color: #fff; width: 100%; margin-top: 1rem; box-shadow: 0 8px 22px -8px rgba(109,94,246,0.7); }
   .btn.grad:disabled { opacity: 0.35; box-shadow: none; cursor: default; }
-  .btn.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); width: 100%; margin-top: 0.9rem; }
+  .btn.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); display: block; margin: 1.6rem auto 0; }
   .btn.sm { padding: 0.8rem 1.1rem; }
 
-  /* style selector */
   .styles { display: flex; flex-wrap: wrap; gap: 0.45rem; }
-  .style { font-family: var(--sans); font-size: 0.84rem; font-weight: 600; padding: 0.55rem 0.9rem;
-    border-radius: 11px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; transition: 0.14s; }
-  .style .em { display: block; font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.1em; color: var(--sub);
-    text-transform: uppercase; margin-top: 0.1rem; }
-  .style.on { border-color: transparent; background: var(--ink); color: #fff; }
-  .style.on .em { color: rgba(255,255,255,0.6); }
+  .style { font-family: var(--sans); font-size: 0.84rem; font-weight: 600; padding: 0.55rem 0.9rem; border-radius: 11px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; transition: 0.14s; }
+  .style .em { display: block; font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.1em; color: var(--sub); text-transform: uppercase; margin-top: 0.1rem; }
+  .style.on { border-color: transparent; background: var(--ink); color: #fff; } .style.on .em { color: rgba(255,255,255,0.6); }
 
-  /* upload */
-  .drop { border: 1.5px dashed var(--line); border-radius: 16px; padding: 1.6rem 1rem; text-align: center;
-    cursor: pointer; transition: 0.15s; background: #fff; }
+  .drop { border: 1.5px dashed var(--line); border-radius: 16px; padding: 1.8rem 1rem; text-align: center; cursor: pointer; transition: 0.15s; background: #fff; }
   .drop.over, .drop:active { border-color: var(--a1); background: #faf9ff; }
-  .drop .ic { font-size: 1.5rem; }
-  .drop .big { font-weight: 700; font-size: 0.95rem; margin-top: 0.35rem; }
-  .drop .sub { font-size: 0.76rem; color: var(--sub); margin-top: 0.25rem; }
-  .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 0.5rem; margin-top: 0.9rem; }
+  .drop .ic { font-size: 1.6rem; } .drop .big { font-weight: 700; font-size: 0.98rem; margin-top: 0.35rem; } .drop .sub { font-size: 0.76rem; color: var(--sub); margin-top: 0.25rem; }
+  .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: 0.5rem; margin-top: 0.9rem; }
   .thumb { position: relative; aspect-ratio: 3/4; border-radius: 12px; overflow: hidden; border: 1px solid var(--line-soft); }
   .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .thumb .idx { position: absolute; left: 5px; bottom: 5px; font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
-    background: rgba(14,14,18,0.72); color: #fff; padding: 0.05rem 0.35rem; border-radius: 5px; }
-  .thumb .x { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 7px; border: none;
-    background: rgba(14,14,18,0.78); color: #fff; font-size: 13px; line-height: 20px; cursor: pointer; }
+  .thumb .idx { position: absolute; left: 5px; bottom: 5px; font-family: var(--mono); font-size: 0.6rem; font-weight: 600; background: rgba(14,14,18,0.72); color: #fff; padding: 0.05rem 0.35rem; border-radius: 5px; }
+  .thumb .x { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 7px; border: none; background: rgba(14,14,18,0.78); color: #fff; font-size: 13px; line-height: 20px; cursor: pointer; }
 
   .row-between { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; margin-top: 0.9rem; }
   .toggle { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; color: var(--sub); cursor: pointer; user-select: none; }
   .toggle input { display: none; }
   .toggle .track { width: 38px; height: 22px; border-radius: 20px; background: var(--line); position: relative; transition: 0.15s; }
-  .toggle .track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%;
-    background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25); transition: 0.15s; }
+  .toggle .track::after { content:''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25); transition: 0.15s; }
   .toggle input:checked + .track { background: var(--a1); }
   .toggle input:checked + .track::after { transform: translateX(16px); }
 
-  /* loading */
-  #loading { display: none; text-align: center; padding: 3rem 0; }
-  #loading.on { display: block; }
-  .loader { width: 40px; height: 40px; margin: 0 auto 1.1rem; border-radius: 50%;
-    background: conic-gradient(var(--a1), var(--a2), transparent 75%); -webkit-mask: radial-gradient(farthest-side, transparent 60%, #000 62%);
-    mask: radial-gradient(farthest-side, transparent 60%, #000 62%); animation: sp 0.9s linear infinite; }
+  #loading { display: none; text-align: center; padding: 3.5rem 0; } #loading.on { display: block; }
+  .loader { width: 44px; height: 44px; margin: 0 auto 1.1rem; border-radius: 50%; background: conic-gradient(var(--a1), var(--a2), transparent 75%);
+    -webkit-mask: radial-gradient(farthest-side, transparent 60%, #000 62%); mask: radial-gradient(farthest-side, transparent 60%, #000 62%); animation: sp 0.9s linear infinite; }
   @keyframes sp { to { transform: rotate(360deg); } }
-  #loadmsg { font-size: 0.86rem; color: var(--sub); }
+  #loadmsg { font-size: 0.88rem; color: var(--sub); }
 
-  /* results */
-  #results { display: none; }
-  #results.on { display: block; }
+  #results { display: none; } #results.on { display: block; }
   .items-wrap { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-  .chip { font-size: 0.76rem; padding: 0.35rem 0.7rem; border-radius: 10px; background: #fff; border: 1px solid var(--line-soft); }
-  .chip b { color: var(--a1); }
+  .chip { font-size: 0.76rem; padding: 0.35rem 0.7rem; border-radius: 10px; background: #fff; border: 1px solid var(--line-soft); } .chip b { color: var(--a1); }
 
-  .look { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 22px; overflow: hidden;
-    margin-top: 1rem; box-shadow: var(--shadow); }
-  .look-head { padding: 1.1rem 1.15rem 0.9rem; }
-  .look-scene { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase;
-    color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text; font-weight: 700; }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.1rem; align-items: start; margin-top: 0.4rem; }
+  .look { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow); }
+  .look-head { padding: 1.1rem 1.2rem 0.6rem; }
+  .look-scene { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text; font-weight: 700; }
   .look-title { font-size: 1.5rem; font-weight: 780; letter-spacing: -0.02em; margin-top: 0.2rem; line-height: 1.1; }
-  .board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 0 4px; }
-  .board .tile { position: relative; aspect-ratio: 3/4; overflow: hidden; background: #f0eff4; }
-  .board .tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .board .tile .no { position: absolute; left: 4px; top: 4px; font-family: var(--mono); font-size: 0.55rem;
-    background: rgba(14,14,18,0.7); color: #fff; padding: 0.02rem 0.28rem; border-radius: 4px; }
-  .board .tile.add { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-    background: repeating-linear-gradient(45deg, #faf9ff, #faf9ff 8px, #f3f1fb 8px, #f3f1fb 16px);
-    border: 1px dashed rgba(109,94,246,0.5); padding: 0.3rem; }
-  .board .tile.add .plus { font-size: 1rem; color: var(--a1); font-weight: 700; }
-  .board .tile.add .lbl { font-size: 0.62rem; color: var(--a1); line-height: 1.25; margin-top: 0.15rem; }
-  .look-body { padding: 0.95rem 1.15rem 1.2rem; }
-  .look-comment { font-size: 0.92rem; line-height: 1.7; color: var(--ink); }
+  .illus { margin: 0.4rem 0.8rem 0; border-radius: 16px; overflow: hidden; background: radial-gradient(120% 90% at 50% 0%, #fbfaff 0%, #f1eff7 100%); aspect-ratio: 4/5; display: flex; align-items: center; justify-content: center; position: relative; }
+  .illus img { width: 100%; height: 100%; display: block; object-fit: cover; cursor: zoom-in; }
+  .illus .mini-loader { width: 30px; height: 30px; border-radius: 50%; background: conic-gradient(var(--a1), var(--a2), transparent 75%);
+    -webkit-mask: radial-gradient(farthest-side, transparent 58%, #000 60%); mask: radial-gradient(farthest-side, transparent 58%, #000 60%); animation: sp 0.9s linear infinite; }
+  .illus .fail { font-size: 0.78rem; color: var(--sub); padding: 1.2rem; text-align: center; line-height: 1.6; }
+  .look-body { padding: 0.95rem 1.2rem 1.3rem; }
+  .look-comment { font-size: 0.92rem; line-height: 1.7; }
+  .ref-label { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--sub); margin: 0.9rem 0 0.4rem; }
+  .refs { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .ref { width: 44px; aspect-ratio: 3/4; border-radius: 8px; overflow: hidden; border: 1px solid var(--line-soft); }
+  .ref img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .look-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.85rem; }
   .tag { font-size: 0.72rem; padding: 0.25rem 0.6rem; border-radius: 8px; background: #f4f3f9; color: var(--sub); }
   .tag.add { background: rgba(109,94,246,0.1); color: var(--a1); font-weight: 600; }
 
-  .err { font-size: 0.82rem; color: #B4231C; background: #FDECEA; border: 1px solid #F6C9C5;
-    border-radius: 12px; padding: 0.75rem 0.9rem; margin-top: 0.9rem; line-height: 1.6; display: none; }
-  .err.on { display: block; }
+  .err { font-size: 0.82rem; color: #B4231C; background: #FDECEA; border: 1px solid #F6C9C5; border-radius: 12px; padding: 0.75rem 0.9rem; margin-top: 0.9rem; line-height: 1.6; display: none; } .err.on { display: block; }
+  footer { text-align: center; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.06em; color: var(--sub); margin-top: 2.6rem; line-height: 1.9; text-transform: uppercase; }
 
-  footer { text-align: center; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.06em; color: var(--sub);
-    margin-top: 2.4rem; line-height: 1.9; text-transform: uppercase; }
+  #lightbox { position: fixed; inset: 0; z-index: 100; background: rgba(12,12,16,0.93); display: none; align-items: center; justify-content: center; padding: 2.5vw; cursor: zoom-out; }
+  #lightbox.on { display: flex; }
+  #lightbox img { max-width: 100%; max-height: 100%; border-radius: 10px; box-shadow: 0 24px 70px rgba(0,0,0,0.55); }
+  #lightbox .close { position: absolute; top: 1.2rem; right: 1.4rem; color: #fff; font-size: 1.6rem; opacity: 0.7; }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <header class="hero">
-    <span class="kicker"><span class="dot"></span> AI PERSONAL STYLIST · 2026</span>
-    <h1>コーデ<span class="g">&</span>マッチ</h1>
-    <p class="lede">手持ちの服を撮るだけ。あなたの服を主役に、選んだテイストで<b>ルックを組み直して</b>、足りない一枚まで提案します。</p>
-  </header>
+  <div class="stack">
+    <header class="hero">
+      <span class="kicker"><span class="dot"></span> この服、似合う？ · AI STYLING</span>
+      <h1>Match <span class="g">My</span> Fit</h1>
+      <p class="lede">手持ちの服から“あなたに似合う”コーデを組んで、<b>エディトリアルなイラスト</b>で見せます。迷う一枚も、着た姿で確かめられる。
+        <span class="disclaimer">※スタイリングはClaude、イラストはGeminiが生成。手持ち写真を参照して描くので色柄も寄りますが、生成物は毎回少し変わり、手描き水彩の完全一致は保証しません。</span></p>
+    </header>
 
-  <!-- STEP 1 : API key -->
-  <div class="card" id="sec-key">
-    <div class="step"><span class="n">1</span> APIキー（初回のみ）</div>
-    <div id="key-set" class="key-row">
-      <input type="password" id="apikey" placeholder="sk-ant-… を貼り付け" autocomplete="off">
-      <button class="btn solid sm" onclick="saveKey()">保存</button>
+    <div class="card" id="sec-key">
+      <div class="step"><span class="n">1</span> APIキー（初回のみ・2つ）</div>
+      <div class="keyfield">
+        <div class="keylabel">① Claude — スタイリング <span class="kstat" id="kstat-a"></span></div>
+        <div id="key-set-a" class="key-row">
+          <input type="password" id="apikey" placeholder="sk-ant-… を貼り付け" autocomplete="off">
+          <button class="btn solid sm" onclick="saveKey('a')">保存</button>
+        </div>
+      </div>
+      <div class="keyfield">
+        <div class="keylabel">② Gemini — イラスト生成 <span class="kstat" id="kstat-g"></span></div>
+        <div id="key-set-g" class="key-row">
+          <input type="password" id="gkey" placeholder="AIza… を貼り付け" autocomplete="off">
+          <button class="btn solid sm" onclick="saveKey('g')">保存</button>
+        </div>
+      </div>
+      <p class="hint">両方とも <b>ブラウザ内だけ</b>に保存され、各社へ直接送信されます（サーバー非経由）。Claudeは <span class="link" onclick="window.open('https://console.anthropic.com/settings/keys','_blank')">console.anthropic.com</span>、Geminiは <span class="link" onclick="window.open('https://aistudio.google.com/apikey','_blank')">aistudio.google.com/apikey</span> で発行（画像生成は従量課金の有効化が必要）。</p>
     </div>
-    <div id="key-done" style="display:none">
-      <span class="key-ok">キーを保存済み（この端末のブラウザ内のみ）</span>
-      <span class="mini-link" onclick="clearKey()">変更</span>
+
+    <div class="card" id="sec-up">
+      <div class="step"><span class="n">2</span> テイストを選ぶ</div>
+      <div class="styles" id="styles"></div>
+      <div class="step" style="margin-top:1.3rem"><span class="n">3</span> 手持ちの服をアップ</div>
+      <div class="drop" id="drop" onclick="document.getElementById('file').click()">
+        <div class="ic">📷</div>
+        <div class="big">タップして写真を選ぶ</div>
+        <div class="sub">トップス・パンツ・靴・小物など。複数枚OK（最大8枚）</div>
+      </div>
+      <input type="file" id="file" accept="image/*" multiple style="display:none">
+      <div class="thumbs" id="thumbs"></div>
+      <input type="text" id="note" placeholder="好みメモ（任意）例：ネイビー多め／ローファー持ってる" style="margin-top:0.9rem">
+      <div class="row-between">
+        <label class="toggle"><input type="checkbox" id="eco"><span class="track"></span><span>省コストモード（Haiku・少し軽量）</span></label>
+      </div>
+      <button class="btn grad" id="go" onclick="analyze()" disabled>似合うか、組んで描いてもらう</button>
+      <div class="err" id="err"></div>
     </div>
-    <p class="hint">キーは <b>あなたのブラウザ内だけ</b>に保存され、Anthropicへ直接送信されます（サーバー非経由）。<span class="link" onclick="window.open('https://console.anthropic.com/settings/keys','_blank')">console.anthropic.com</span> で発行。</p>
   </div>
 
-  <!-- STEP 2 : style + upload -->
-  <div class="card" id="sec-up">
-    <div class="step"><span class="n">2</span> テイストを選ぶ</div>
-    <div class="styles" id="styles"></div>
-
-    <div class="step" style="margin-top:1.3rem"><span class="n">3</span> 手持ちの服をアップ</div>
-    <div class="drop" id="drop" onclick="document.getElementById('file').click()">
-      <div class="ic">📷</div>
-      <div class="big">タップして写真を選ぶ</div>
-      <div class="sub">トップス・パンツ・靴・小物など。複数枚OK（最大8枚）</div>
-    </div>
-    <input type="file" id="file" accept="image/*" multiple style="display:none">
-    <div class="thumbs" id="thumbs"></div>
-
-    <input type="text" id="note" placeholder="好みメモ（任意）例：ネイビー多め／ローファー持ってる" style="margin-top:0.9rem">
-
-    <div class="row-between">
-      <label class="toggle">
-        <input type="checkbox" id="eco"><span class="track"></span>
-        <span>省コストモード（Haiku・少し軽量）</span>
-      </label>
-    </div>
-
-    <button class="btn grad" id="go" onclick="analyze()" disabled>ルックを組んでもらう</button>
-    <div class="err" id="err"></div>
-  </div>
-
-  <!-- loading -->
   <div id="loading">
     <div class="loader"></div>
     <div id="loadmsg">手持ちを解析中…</div>
   </div>
 
-  <!-- results -->
   <div id="results">
-    <div class="card">
-      <div class="step"><span class="n">◆</span> あなたのアイテム</div>
-      <div class="items-wrap" id="items"></div>
+    <div class="stack">
+      <div class="card">
+        <div class="step"><span class="n">◆</span> あなたのアイテム</div>
+        <div class="items-wrap" id="items"></div>
+      </div>
+      <div class="step" style="margin:1.7rem 0 0.2rem"><span class="n grad">◆</span> <span id="res-style-label">提案</span></div>
     </div>
-    <div class="step" style="margin:1.6rem 0 0.2rem"><span class="n grad">◆</span> <span id="res-style-label">提案</span></div>
-    <div id="looks"></div>
-    <button class="btn ghost" onclick="reset()">別の服・テイストでもう一度</button>
+    <div id="looks" class="gallery"></div>
+    <div class="stack"><button class="btn ghost" onclick="reset()">別の服・テイストでもう一度</button></div>
   </div>
 
-  <footer>Powered by Claude · Photos & key never leave your device</footer>
+  <footer>Match My Fit · Powered by Claude + Gemini · Photos & keys never leave your device</footer>
 </div>
+
+<div id="lightbox" onclick="closeLb()"><span class="close">×</span><img id="lb-img" alt=""></div>
 
 <script>
 const KEY_LS = 'coordmatch_apikey';
-let files = [];        // {b64, mediaType, url}
+const GKEY_LS = 'coordmatch_gkey';
+let files = [];
 let styleKey = 'ivy';
 
-/* ---------- styles ---------- */
 const STYLES = {
   ivy:     { label: 'アイビー',   em: 'IVY / PREPPY',
-    persona: 'アイビー／プレッピー（オックスフォードBDシャツ、レジメンタルタイ、シェットランドニット、チノ／グレーフラノ、ブレザー、ローファー、ネイビー×オフホワイト×カレッジカラー、きちんと感の中の少しの砕け）' },
+    persona: 'アイビー／プレッピー（オックスフォードBDシャツ、レジメンタルタイ、シェットランドニット、チノ／グレーフラノ、ブレザー、ローファー、ネイビー×オフホワイト×カレッジカラー）',
+    palette: 'ネイビー、オフホワイト、ベージュ、ボルドー、フォレストグリーン' },
   kireime: { label: 'きれいめ',   em: 'CLEAN / MINIMAL',
-    persona: 'きれいめ大人カジュアル（上質な無地、ジャストサイズ、ニュートラルカラー、とろみ素材、ミニマルで清潔感のある都会的な着こなし）' },
+    persona: 'きれいめ大人カジュアル（上質な無地、ジャストサイズ、ニュートラルカラー、とろみ素材、ミニマルで清潔感）',
+    palette: 'グレージュ、ホワイト、ブラック、チャコール、くすみブルー' },
   vintage: { label: '古着MIX',    em: 'VINTAGE / THRIFT',
-    persona: '古着MIX（70s〜90sのビンテージ、色や柄の効かせ、レイヤード、程よい抜けとサイズ感の遊び、一点投入で今っぽく）' },
+    persona: '古着MIX（70s〜90sのビンテージ、色柄の効かせ、レイヤード、抜けとサイズ感の遊び）',
+    palette: 'マスタード、ブラウン、レンガ、モスグリーン、生成り' },
   mode:    { label: 'モード',     em: 'MODE / AVANT',
-    persona: 'モード（モノトーン中心、建築的なシルエット、ロング丈やレイヤー、素材コントラスト、シャープで洗練された都会的アバンギャルド）' },
+    persona: 'モード（モノトーン中心、建築的シルエット、ロング丈やレイヤー、シャープで洗練）',
+    palette: 'ブラック、ホワイト、グレー、わずかな差し色' },
   street:  { label: 'ストリート', em: 'STREET',
-    persona: 'ストリート（オーバーサイズ、スニーカー主役、スウェット／カーゴ、ロゴやグラフィック、こなれたリラックス感とバランス）' },
+    persona: 'ストリート（オーバーサイズ、スニーカー主役、スウェット／カーゴ、ロゴやグラフィック）',
+    palette: 'ブラック、グレー、鮮やかな差し色、生成り' },
   french:  { label: 'フレンチ',   em: 'FRENCH CASUAL',
-    persona: 'フレンチカジュアル（マリニエール、デニム、トレンチ、抜け感のあるパリジェンヌ的な着こなし、力の抜けた上品さ）' }
+    persona: 'フレンチカジュアル（マリニエール、デニム、トレンチ、抜け感のあるパリジェンヌ）',
+    palette: 'ネイビー、ホワイト、生成り、赤の差し色、インディゴ' }
 };
 function renderStyles(){
   document.getElementById('styles').innerHTML = Object.entries(STYLES).map(([k,s]) =>
@@ -255,95 +222,68 @@ function renderStyles(){
 }
 function pickStyle(k){ styleKey = k; renderStyles(); }
 
-/* ---------- api key ---------- */
+const KEYMAP = { a: { ls: KEY_LS, set: 'key-set-a', stat: 'kstat-a', inp: 'apikey' },
+                 g: { ls: GKEY_LS, set: 'key-set-g', stat: 'kstat-g', inp: 'gkey' } };
 function refreshKeyUI(){
-  const k = localStorage.getItem(KEY_LS);
-  document.getElementById('key-set').style.display = k ? 'none' : 'flex';
-  document.getElementById('key-done').style.display = k ? 'block' : 'none';
+  for(const which of ['a','g']){
+    const m = KEYMAP[which], has = !!localStorage.getItem(m.ls);
+    document.getElementById(m.set).style.display = has ? 'none' : 'flex';
+    document.getElementById(m.stat).innerHTML = has ? `✓ 保存済み<span class="ml" onclick="clearKey('${which}')">変更</span>` : '';
+  }
 }
-function saveKey(){
-  const v = document.getElementById('apikey').value.trim();
-  if(!v) return;
-  localStorage.setItem(KEY_LS, v);
-  document.getElementById('apikey').value = '';
-  refreshKeyUI();
-}
-function clearKey(){ localStorage.removeItem(KEY_LS); refreshKeyUI(); }
+function saveKey(which){ const m = KEYMAP[which]; const v = document.getElementById(m.inp).value.trim(); if(!v) return;
+  localStorage.setItem(m.ls, v); document.getElementById(m.inp).value=''; refreshKeyUI(); }
+function clearKey(which){ localStorage.removeItem(KEYMAP[which].ls); refreshKeyUI(); }
 
-/* ---------- upload ---------- */
 const drop = document.getElementById('drop');
 document.getElementById('file').addEventListener('change', e => handleFiles(e.target.files));
 ['dragover','dragenter'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
-
 async function handleFiles(list){
-  for(const f of list){
-    if(files.length >= 8) break;
-    if(!f.type.startsWith('image/')) continue;
-    const b64 = await resizeToB64(f, 1024);
-    files.push({ b64, mediaType: 'image/jpeg', url: 'data:image/jpeg;base64,' + b64 });
-  }
+  for(const f of list){ if(files.length>=8) break; if(!f.type.startsWith('image/')) continue;
+    const b64 = await resizeToB64(f,1024); files.push({ b64, mediaType:'image/jpeg', url:'data:image/jpeg;base64,'+b64 }); }
   renderThumbs();
 }
 function renderThumbs(){
-  document.getElementById('thumbs').innerHTML = files.map((f,i) =>
+  document.getElementById('thumbs').innerHTML = files.map((f,i)=>
     `<div class="thumb"><img src="${f.url}"><span class="idx">${i+1}</span><button class="x" onclick="removeFile(${i})">×</button></div>`).join('');
-  document.getElementById('go').disabled = files.length === 0;
+  document.getElementById('go').disabled = files.length===0;
 }
 function removeFile(i){ files.splice(i,1); renderThumbs(); }
-function resizeToB64(file, max){
-  return new Promise((res, rej) => {
-    const img = new Image();
-    img.onload = () => {
-      const s = Math.min(1, max / Math.max(img.width, img.height));
-      const w = Math.round(img.width * s), h = Math.round(img.height * s);
-      const c = document.createElement('canvas'); c.width = w; c.height = h;
-      c.getContext('2d').drawImage(img, 0, 0, w, h);
-      res(c.toDataURL('image/jpeg', 0.85).split(',')[1]);
-    };
-    img.onerror = rej;
-    img.src = URL.createObjectURL(file);
-  });
-}
+function resizeToB64(file,max){ return new Promise((res,rej)=>{ const img=new Image();
+  img.onload=()=>{ const s=Math.min(1,max/Math.max(img.width,img.height)); const w=Math.round(img.width*s),h=Math.round(img.height*s);
+    const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h);
+    res(c.toDataURL('image/jpeg',0.85).split(',')[1]); }; img.onerror=rej; img.src=URL.createObjectURL(file); }); }
 
-/* ---------- analyze ---------- */
-const SCHEMA = {
-  type: 'object',
-  properties: {
-    items: { type: 'array', items: { type: 'object', properties: {
-      name: { type: 'string' }, category: { type: 'string' }, color: { type: 'string' }
-    }, required: ['name','category','color'], additionalProperties: false } },
-    coordinates: { type: 'array', items: { type: 'object', properties: {
-      title: { type: 'string' },
-      scene: { type: 'string' },
-      use: { type: 'array', items: { type: 'string' } },
-      use_indexes: { type: 'array', items: { type: 'integer' } },
-      add: { type: 'array', items: { type: 'string' } },
-      comment: { type: 'string' }
-    }, required: ['title','scene','use','use_indexes','add','comment'], additionalProperties: false } }
-  },
-  required: ['items','coordinates'], additionalProperties: false
-};
+const SCHEMA = { type:'object', properties:{
+  items:{type:'array',items:{type:'object',properties:{name:{type:'string'},category:{type:'string'},color:{type:'string'}},required:['name','category','color'],additionalProperties:false}},
+  coordinates:{type:'array',items:{type:'object',properties:{
+    title:{type:'string'}, scene:{type:'string'}, use:{type:'array',items:{type:'string'}}, use_indexes:{type:'array',items:{type:'integer'}}, add:{type:'array',items:{type:'string'}}, comment:{type:'string'}
+  },required:['title','scene','use','use_indexes','add','comment'],additionalProperties:false}}
+}, required:['items','coordinates'], additionalProperties:false };
 
-function buildSystem(){
-  const s = STYLES[styleKey];
-  return `あなたは"${s.persona}"を専門とする一流スタイリストです。この美学を深く理解しています。
+function buildSystem(){ const s=STYLES[styleKey];
+  return `あなたは"${s.persona}"を専門とする一流スタイリストです。
 ユーザーの手持ち服の写真（順に1番からN番まで番号付き）を見て、それらを主役にした「${s.label}」のコーディネートを日本語で提案します。
-- 提案は2〜3パターン。それぞれ違うシーンを想定（sceneは英語の短いラベル、例：WEEKEND / CLEAN OFFICE / NIGHT OUT）。
-- use には各コーデで使う手持ちアイテム名、use_indexes にはそのアイテムに対応する写真番号（1始まりの整数）を必ず入れる。
-- 足りない定番アイテムがあれば add に具体名で（例："ネイビーのローファー"）。手持ちだけで十分なら add は空配列。
-- comment は審美眼のある一言。褒めるだけでなく、そのテイストらしい着崩し方や理由を添える。`;
-}
+- 提案は2〜3パターン。sceneは英語の短いラベル。
+- use に各コーデで使う手持ちアイテム名、use_indexes に対応する写真番号（1始まりの整数）を必ず入れる。
+- 足りない定番は add に具体名で。手持ちで十分なら add は空配列。
+- comment は審美眼のある一言。「なぜ似合うか」と着崩し方を添える。`; }
+
+function claudeHeaders(key){ return { 'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true' }; }
 
 async function analyze(){
   const key = localStorage.getItem(KEY_LS);
+  const gkey = localStorage.getItem(GKEY_LS);
   const errEl = document.getElementById('err'); errEl.classList.remove('on');
-  if(!key){ showErr('先に①APIキーを保存してください。'); return; }
-  if(files.length === 0) return;
+  if(!key){ showErr('先に①Claudeキーを保存してください。'); return; }
+  if(!gkey){ showErr('先に②Geminiキーを保存してください（イラスト生成に必要）。'); return; }
+  if(files.length===0) return;
 
-  document.getElementById('sec-up').style.display = 'none';
-  document.getElementById('sec-key').style.display = 'none';
+  document.getElementById('sec-up').style.display='none';
+  document.getElementById('sec-key').style.display='none';
+  document.querySelector('.hero').style.display='none';
   document.getElementById('loading').classList.add('on');
   document.getElementById('loadmsg').textContent = STYLES[styleKey].label + 'で組んでいます…';
 
@@ -351,86 +291,106 @@ async function analyze(){
   const model = document.getElementById('eco').checked ? 'claude-haiku-4-5' : 'claude-opus-4-8';
   const userText = `これは私の手持ちアイテムの写真です（${files.length}枚、順に1〜${files.length}番）。これらを主役にした「${STYLES[styleKey].label}」のコーディネートを提案してください。`
     + (note ? `\n好みメモ：${note}` : '');
-
-  const content = files.map(f => ({ type: 'image', source: { type: 'base64', media_type: f.mediaType, data: f.b64 } }));
-  content.push({ type: 'text', text: userText });
+  const content = files.map(f=>({ type:'image', source:{ type:'base64', media_type:f.mediaType, data:f.b64 } }));
+  content.push({ type:'text', text:userText });
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 4000,
-        system: buildSystem(),
-        output_config: { format: { type: 'json_schema', schema: SCHEMA } },
-        messages: [{ role: 'user', content }]
-      })
-    });
+    const resp = await fetch('https://api.anthropic.com/v1/messages', { method:'POST', headers:claudeHeaders(key),
+      body: JSON.stringify({ model, max_tokens:4000, system:buildSystem(), output_config:{format:{type:'json_schema',schema:SCHEMA}}, messages:[{role:'user',content}] }) });
     if(!resp.ok){ throw new Error(`APIエラー (${resp.status})：${(await resp.text()).slice(0,200)}`); }
     const data = await resp.json();
-    if(data.stop_reason === 'refusal'){ throw new Error('この画像では提案を作れませんでした。別の服の写真でお試しください。'); }
-    const textBlock = (data.content || []).find(b => b.type === 'text');
-    if(!textBlock){ throw new Error('応答を解析できませんでした。もう一度お試しください。'); }
-    renderResults(JSON.parse(textBlock.text));
+    if(data.stop_reason==='refusal'){ throw new Error('この画像では提案を作れませんでした。別の写真でお試しください。'); }
+    const tb = (data.content||[]).find(b=>b.type==='text');
+    if(!tb){ throw new Error('応答を解析できませんでした。'); }
+    const parsed = JSON.parse(tb.text);
+    renderResults(parsed);
+    document.getElementById('loading').classList.remove('on');
+    (parsed.coordinates||[]).forEach((c,i)=> drawLook(c, i));
   } catch(e){
     document.getElementById('loading').classList.remove('on');
-    document.getElementById('sec-up').style.display = 'block';
-    document.getElementById('sec-key').style.display = 'block';
-    showErr(e.message || String(e));
+    document.querySelector('.hero').style.display='block';
+    document.getElementById('sec-up').style.display='block';
+    document.getElementById('sec-key').style.display='block';
+    showErr(e.message||String(e));
   }
 }
-function showErr(m){ const e = document.getElementById('err'); e.textContent = m; e.classList.add('on'); }
+function showErr(m){ const e=document.getElementById('err'); e.textContent=m; e.classList.add('on'); }
 
 function renderResults(d){
-  document.getElementById('loading').classList.remove('on');
   document.getElementById('res-style-label').textContent = STYLES[styleKey].label + ' の提案';
-
-  document.getElementById('items').innerHTML = (d.items || []).map(it =>
+  document.getElementById('items').innerHTML = (d.items||[]).map(it=>
     `<span class="chip"><b>${esc(it.category)}</b> ${esc(it.name)}・${esc(it.color)}</span>`).join('');
-
-  document.getElementById('looks').innerHTML = (d.coordinates || []).map(c => {
-    const idxs = (c.use_indexes || []).filter(n => n >= 1 && n <= files.length);
-    const photoTiles = idxs.map(n =>
-      `<div class="tile"><img src="${files[n-1].url}"><span class="no">${n}</span></div>`).join('');
-    const addTiles = (c.add || []).map(a =>
-      `<div class="tile add"><span class="plus">＋</span><span class="lbl">${esc(a)}</span></div>`).join('');
-    const tags = (c.use || []).map(u => `<span class="tag">${esc(u)}</span>`).join('')
-      + (c.add || []).map(a => `<span class="tag add">＋${esc(a)}</span>`).join('');
+  document.getElementById('looks').innerHTML = (d.coordinates||[]).map((c,i)=>{
+    const idxs=(c.use_indexes||[]).filter(n=>n>=1&&n<=files.length);
+    const refs = idxs.map(n=>`<div class="ref"><img src="${files[n-1].url}"></div>`).join('');
+    const tags=(c.use||[]).map(u=>`<span class="tag">${esc(u)}</span>`).join('')
+      +(c.add||[]).map(a=>`<span class="tag add">＋${esc(a)}</span>`).join('');
     return `<div class="look">
-      <div class="look-head">
-        <div class="look-scene">${esc(c.scene)}</div>
-        <div class="look-title">${esc(c.title)}</div>
-      </div>
-      <div class="board">${photoTiles}${addTiles}</div>
+      <div class="look-head"><div class="look-scene">${esc(c.scene)}</div><div class="look-title">${esc(c.title)}</div></div>
+      <div class="illus" id="illus-${i}"><div class="mini-loader"></div></div>
       <div class="look-body">
         <p class="look-comment">${esc(c.comment)}</p>
+        ${refs?`<div class="ref-label">手持ちの参照</div><div class="refs">${refs}</div>`:''}
         <div class="look-tags">${tags}</div>
-      </div>
-    </div>`;
+      </div></div>`;
   }).join('');
-
   document.getElementById('results').classList.add('on');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top:0, behavior:'smooth' });
 }
-function esc(s){ return String(s==null?'':s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
-function reset(){
-  files = []; renderThumbs();
-  document.getElementById('note').value = '';
+const GEMINI_MODEL = 'gemini-2.5-flash-image';
+function illusPrompt(c, s){
+  const pieces = [...(c.use||[]), ...(c.add||[])].join('、');
+  return `A full-length editorial fashion illustration in the style of hand-drawn ink linework with loose, expressive watercolor washes — a magazine fashion croquis, elegant and refined.
+Depict a single figure, full body from head to toe, standing in a natural elegant pose, on a clean off-white paper background.
+The figure wears this ${s.label} outfit: ${pieces}.
+Use the provided clothing photographs as reference for the real colours, patterns, materials and details of each garment — keep them recognisable.
+Palette leaning: ${s.palette}. No text, no captions, no borders, no logos. Single figure only.`;
+}
+async function drawLook(c, i){
+  const box = document.getElementById('illus-'+i);
+  if(!box) return;
+  const gkey = localStorage.getItem(GKEY_LS);
+  if(!gkey){ box.innerHTML = '<div class="fail">Geminiキーが未設定です</div>'; return; }
+  const s = STYLES[styleKey];
+  const idxs = (c.use_indexes||[]).filter(n => n>=1 && n<=files.length);
+  const parts = [{ text: illusPrompt(c, s) }];
+  idxs.forEach(n => parts.push({ inlineData: { mimeType: 'image/jpeg', data: files[n-1].b64 } }));
+  try {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=` + encodeURIComponent(gkey),
+      { method:'POST', headers:{ 'content-type':'application/json' }, body: JSON.stringify({ contents:[{ role:'user', parts }] }) });
+    const data = await r.json();
+    if(!r.ok){ throw new Error((data && data.error && data.error.message) || ('HTTP ' + r.status)); }
+    const cand = data.candidates && data.candidates[0];
+    const cparts = (cand && cand.content && cand.content.parts) || [];
+    const imgPart = cparts.find(p => p.inlineData && p.inlineData.data) || cparts.find(p => p.inline_data && p.inline_data.data);
+    const inl = imgPart && (imgPart.inlineData || imgPart.inline_data);
+    if(!inl){
+      const txt = cparts.map(p => p.text).filter(Boolean).join(' ');
+      throw new Error(txt || '画像が返りませんでした');
+    }
+    const src = 'data:' + (inl.mimeType || inl.mime_type || 'image/png') + ';base64,' + inl.data;
+    const img = new Image();
+    img.onload = ()=>{ box.innerHTML=''; box.appendChild(img); img.onclick = ()=> openLb(src); };
+    img.onerror = ()=>{ box.innerHTML='<div class="fail">画像を表示できませんでした</div>'; };
+    img.src = src;
+  } catch(e){
+    box.innerHTML = '<div class="fail">イラスト生成に失敗：' + esc(String(e.message||e)).slice(0,140) + '</div>';
+  }
+}
+
+function openLb(src){ const lb=document.getElementById('lightbox'); document.getElementById('lb-img').src=src; lb.classList.add('on'); }
+function closeLb(){ document.getElementById('lightbox').classList.remove('on'); }
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function reset(){ files=[]; renderThumbs(); document.getElementById('note').value='';
   document.getElementById('results').classList.remove('on');
-  document.getElementById('sec-up').style.display = 'block';
-  document.getElementById('sec-key').style.display = 'block';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+  document.querySelector('.hero').style.display='block';
+  document.getElementById('sec-up').style.display='block';
+  document.getElementById('sec-key').style.display='block';
+  window.scrollTo({ top:0, behavior:'smooth' }); }
 
-renderStyles();
-refreshKeyUI();
+renderStyles(); refreshKeyUI();
 </script>
 </body>
 </html>
