@@ -144,7 +144,7 @@
 
   <!-- LANDING : random sample looks -->
   <div id="landing">
-    <div class="demo-note">お試し例（ランダム表示）</div>
+    <div class="demo-note" id="demo-note">お試し例（ランダム表示）</div>
     <div id="demo" class="gallery"></div>
   </div>
 
@@ -228,6 +228,11 @@ let styleKey = 'ivy';
 let gender = 'mens';
 function genderJP(){ return gender==='mens' ? 'メンズ' : 'ウィメンズ'; }
 
+const LAST_LS = 'coordmatch_last';
+let lastSession = null;
+function persistLast(){ if(!lastSession) return; try { localStorage.setItem(LAST_LS, JSON.stringify(lastSession)); } catch(e){} }
+function loadLast(){ try { const s = localStorage.getItem(LAST_LS); return s ? JSON.parse(s) : null; } catch(e){ return null; } }
+
 const STYLES = {
   ivy:     { label: 'アイビー',   em: 'IVY / PREPPY',
     persona: 'アイビー／プレッピー（オックスフォードBDシャツ、レジメンタルタイ、シェットランドニット、チノ／グレーフラノ、ブレザー、ローファー、ネイビー×オフホワイト×カレッジカラー）',
@@ -255,7 +260,7 @@ function renderStyles(){
 function pickStyle(k){ styleKey = k; renderStyles(); }
 function pickGender(g){ gender = g;
   document.querySelectorAll('#gender .seg-btn').forEach(b => b.classList.toggle('on', b.dataset.g===g));
-  renderDemo(); }
+  renderLanding(); }
 
 /* ---------- view switching ---------- */
 function showView(v){
@@ -266,7 +271,7 @@ function showView(v){
   document.getElementById('topcta').style.display = (v==='landing') ? '' : 'none';
   window.scrollTo({ top:0, behavior:'smooth' });
 }
-function showLanding(){ showView('landing'); }
+function showLanding(){ renderLanding(); showView('landing'); }
 function showSetup(){ showView('setup'); }
 
 /* ---------- sample looks (landing) ---------- */
@@ -363,6 +368,29 @@ function renderDemo(){
   document.getElementById('demo').innerHTML = pool.slice(0,3).map((s,i) => demoCard(s,i)).join('');
 }
 
+/* landing prefers the last generated (real) look set, else shows samples */
+function memoryCard(l){
+  const tags = (l.use||[]).map(u=>`<span class="tag">${esc(u)}</span>`).join('')
+    + (l.add||[]).map(a=>`<span class="tag add">＋${esc(a)}</span>`).join('');
+  return `<div class="look">
+    <div class="look-head"><div class="look-scene">${esc(l.scene)}</div><div class="look-title">${esc(l.title)}</div></div>
+    <div class="illus"><img src="${l.img}" alt=""></div>
+    <div class="look-body"><p class="look-comment">${esc(l.comment)}</p><div class="look-tags">${tags}</div></div>
+  </div>`;
+}
+function renderLanding(){
+  const last = loadLast();
+  const note = document.getElementById('demo-note');
+  if(last && last.looks && last.looks.some(l => l.img)){
+    note.textContent = '前回のコーデ' + (last.styleLabel ? ' · ' + last.styleLabel : '');
+    document.getElementById('demo').innerHTML = last.looks.filter(l => l.img).map(memoryCard).join('');
+    document.querySelectorAll('#demo .illus img').forEach(im => { im.onclick = () => openLb(im.src); });
+  } else {
+    note.textContent = 'お試し例（ランダム表示）';
+    renderDemo();
+  }
+}
+
 /* ---------- keys ---------- */
 const KEYMAP = { a: { ls: KEY_LS, set: 'key-set-a', stat: 'kstat-a', inp: 'apikey' },
                  g: { ls: GKEY_LS, set: 'key-set-g', stat: 'kstat-g', inp: 'gkey' } };
@@ -446,6 +474,8 @@ async function analyze(){
     const parsed = JSON.parse(tb.text);
     renderResults(parsed);
     showView('results');
+    lastSession = { gender, styleLabel: STYLES[styleKey].label, savedAt: Date.now(),
+      looks: (parsed.coordinates||[]).map(c => ({ scene:c.scene, title:c.title, comment:c.comment, use:c.use||[], add:c.add||[], img:null })) };
     (parsed.coordinates||[]).forEach((c,i)=> drawLook(c, i));
   } catch(e){
     showView('setup');
@@ -508,7 +538,17 @@ async function drawLook(c, i){
     }
     const src = 'data:' + (inl.mimeType || inl.mime_type || 'image/png') + ';base64,' + inl.data;
     const img = new Image();
-    img.onload = ()=>{ box.innerHTML=''; box.appendChild(img); img.onclick = ()=> openLb(src); };
+    img.onload = ()=>{
+      box.innerHTML=''; box.appendChild(img); img.onclick = ()=> openLb(src);
+      // remember a compact version of this look for the landing page
+      try {
+        const mx = 760, sc = Math.min(1, mx / Math.max(img.naturalWidth, img.naturalHeight));
+        const cv = document.createElement('canvas');
+        cv.width = Math.round(img.naturalWidth * sc); cv.height = Math.round(img.naturalHeight * sc);
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+        if(lastSession && lastSession.looks[i]){ lastSession.looks[i].img = cv.toDataURL('image/jpeg', 0.82); persistLast(); }
+      } catch(e){}
+    };
     img.onerror = ()=>{ box.innerHTML='<div class="fail">画像を表示できませんでした</div>'; };
     img.src = src;
   } catch(e){
@@ -522,7 +562,7 @@ function closeLb(){ document.getElementById('lightbox').classList.remove('on'); 
 function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 function reset(){ files=[]; renderThumbs(); document.getElementById('note').value=''; showView('setup'); }
 
-renderStyles(); refreshKeyUI(); renderDemo(); showView('landing');
+renderStyles(); refreshKeyUI(); renderLanding(); showView('landing');
 </script>
 </body>
 </html>
