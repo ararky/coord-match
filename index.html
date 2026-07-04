@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Match My Fit — この服、似合う？</title>
+<title>Match My Fit — ベーシック100で組む、この服似合う？</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -17,55 +17,92 @@
   html { overflow-x: hidden; }
   body { min-height: 100%; background: var(--bg); color: var(--ink); font-family: var(--sans); overflow-x: hidden;
     -webkit-font-smoothing: antialiased; line-height: 1.5; }
-
-  /* ambient blobs clipped to viewport so they never add scroll height */
   .ambient { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
-  .ambient::before, .ambient::after { content:''; position: absolute; border-radius: 50%; filter: blur(80px); opacity: .24; }
+  .ambient::before, .ambient::after { content:''; position: absolute; border-radius: 50%; filter: blur(80px); opacity: .22; }
   .ambient::before { width: 40vw; height: 40vw; top: -10vw; right: -8vw; background: radial-gradient(circle, var(--a2), transparent 70%); }
   .ambient::after  { width: 36vw; height: 36vw; bottom: -12vw; left: -8vw; background: radial-gradient(circle, var(--a1), transparent 70%); }
 
   .wrap { max-width: 1400px; margin: 0 auto; padding: 1rem 1.2rem 4rem; }
   .stack { max-width: 720px; margin: 0 auto; }
 
-  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.6rem 0.15rem 1.4rem; }
-  .brand { background: none; border: none; cursor: pointer; font-family: var(--sans); font-size: clamp(1.35rem, 3.6vw, 1.85rem); font-weight: 850; letter-spacing: -0.03em; color: var(--ink); padding: 0; line-height: 1; }
+  .topbar { display: flex; align-items: center; gap: 1rem; padding: 0.6rem 0.15rem 1.2rem; flex-wrap: wrap; }
+  .brand { background: none; border: none; cursor: pointer; font-family: var(--sans); font-size: clamp(1.3rem, 3.4vw, 1.7rem); font-weight: 850; letter-spacing: -0.03em; color: var(--ink); padding: 0; line-height: 1; }
   .brand .g { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; font-style: italic; }
+  .nav { display: inline-flex; background: #ecebf1; border: 1px solid var(--line-soft); border-radius: 12px; padding: 3px; gap: 3px; }
+  .nav button { font-family: var(--sans); font-size: 0.82rem; font-weight: 650; padding: 0.42rem 0.9rem; border-radius: 9px; border: none; background: none; color: var(--sub); cursor: pointer; }
+  .nav button.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(14,14,18,0.1); }
+  .topbar .cta { margin-left: auto; }
 
+  .season-bar { display: flex; align-items: center; gap: 0.5rem; margin: 0.2rem 0 1rem; flex-wrap: wrap; }
+  .season-bar .stab { font-family: var(--sans); font-size: 0.92rem; font-weight: 700; padding: 0.5rem 1.15rem; border-radius: 11px; border: 1px solid var(--line); background: #fff; color: var(--sub); cursor: pointer; }
+  .season-bar .stab.on { background: var(--ink); color: #fff; border-color: transparent; }
+  .season-bar .snote { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--sub); margin-left: 0.4rem; }
+
+  .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.6rem 1.4rem; align-items: start; margin-top: 0.2rem; }
+  .gallery.wide3 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .look { background: transparent; }
+  .look-head { padding: 0.2rem 0.15rem 0.7rem; }
+  .look-scene { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text; font-weight: 700; }
+  .look-title { font-size: 1.3rem; font-weight: 780; letter-spacing: -0.02em; margin-top: 0.2rem; line-height: 1.2; }
+  .look-no { font-family: var(--mono); font-size: 0.62rem; color: var(--sub); margin-left: 0.3rem; }
+  .illus { border-radius: 14px; overflow: hidden; background: radial-gradient(120% 90% at 50% 0%, #fbfaff 0%, #f0eef6 100%); aspect-ratio: 4/5; display: flex; align-items: center; justify-content: center; position: relative; }
+  .illus img { width: 100%; height: 100%; display: block; object-fit: cover; cursor: zoom-in; }
+  .illus .mini-loader { width: 30px; height: 30px; border-radius: 50%; background: conic-gradient(var(--a1), var(--a2), transparent 75%);
+    -webkit-mask: radial-gradient(farthest-side, transparent 58%, #000 60%); mask: radial-gradient(farthest-side, transparent 58%, #000 60%); animation: sp 0.9s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  .illus .fail { font-size: 0.76rem; color: var(--sub); padding: 1rem; text-align: center; line-height: 1.6; }
+  .illus .genb { font-family: var(--sans); font-size: 0.82rem; font-weight: 700; padding: 0.6rem 1rem; border-radius: 11px; border: none; cursor: pointer; background: var(--grad); color: #fff; box-shadow: 0 6px 16px -6px rgba(109,94,246,0.6); }
+  .illus .gen-hint { position: absolute; bottom: 0.7rem; left: 0; right: 0; text-align: center; font-size: 0.66rem; color: var(--sub); }
+  .illus .dl { position: absolute; right: 8px; bottom: 8px; font-family: var(--mono); font-size: 0.6rem; background: rgba(14,14,18,0.6); color: #fff; padding: 0.2rem 0.5rem; border-radius: 7px; text-decoration: none; }
+  .look-body { padding: 0.85rem 0.15rem 0; }
+  .look-note { font-size: 0.88rem; line-height: 1.75; color: var(--ink); }
+  .look-tags { display: flex; flex-wrap: wrap; gap: 0.32rem; margin-top: 0.7rem; }
+  .tag { font-size: 0.7rem; padding: 0.24rem 0.55rem; border-radius: 8px; background: #eceaf2; color: #4a4a55; }
+  .tag.ou { background: rgba(109,94,246,0.12); color: var(--a1); font-weight: 600; }
+
+  /* all view */
+  .search-bar { display: flex; align-items: center; gap: 0.7rem; margin: 0.2rem 0 1.1rem; flex-wrap: wrap; }
+  .search-bar input { flex: 1; min-width: 220px; max-width: 480px; font-family: var(--sans); font-size: 0.92rem; padding: 0.7rem 0.9rem; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+  .search-bar input:focus { outline: none; border-color: var(--a1); box-shadow: 0 0 0 3px rgba(109,94,246,0.15); }
+  .count { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.1em; color: var(--sub); }
+
+  /* items view */
+  .cat-group { margin: 1.4rem 0 0; }
+  .cat-title { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--sub); margin-bottom: 0.6rem; }
+  .item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0.45rem; }
+  .item-chip { display: flex; align-items: center; gap: 0.5rem; background: #fff; border: 1px solid var(--line-soft); border-radius: 11px; padding: 0.55rem 0.7rem; font-size: 0.82rem; }
+  .item-chip .iid { font-family: var(--mono); font-size: 0.6rem; color: var(--a1); font-weight: 700; flex-shrink: 0; }
+
+  /* setup / shared */
   .card { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 22px; padding: 1.3rem 1.3rem; margin-top: 1.1rem; box-shadow: var(--shadow); }
   .step { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--sub); display: flex; align-items: center; gap: 0.55rem; margin-bottom: 0.85rem; }
   .step .n { width: 1.5rem; height: 1.5rem; border-radius: 8px; background: var(--ink); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 0.72rem; }
   .step .n.grad { background: var(--grad); }
-
   input[type=password], input[type=text] { width: 100%; font-family: var(--sans); font-size: 0.92rem; padding: 0.8rem 0.9rem; border: 1px solid var(--line); border-radius: 13px; background: #fff; color: var(--ink); }
   input:focus { outline: none; border-color: var(--a1); box-shadow: 0 0 0 3px rgba(109,94,246,0.15); }
   .key-row { display: flex; gap: 0.55rem; } .key-row input { flex: 1; }
-  .keylabel { font-size: 0.78rem; font-weight: 650; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.5rem; }
+  .keylabel { font-size: 0.78rem; font-weight: 650; margin-bottom: 0.4rem; }
   .kstat { font-size: 0.72rem; font-weight: 600; color: #22C55E; }
   .kstat .ml { color: var(--sub); text-decoration: underline; cursor: pointer; margin-left: 0.4rem; font-weight: 500; }
   .keyfield + .keyfield { margin-top: 0.9rem; padding-top: 0.9rem; border-top: 1px solid var(--line-soft); }
   .hint { font-size: 0.74rem; color: var(--sub); margin-top: 0.7rem; line-height: 1.6; } .hint b { color: var(--ink); }
   .link { color: var(--a1); text-decoration: none; border-bottom: 1px solid rgba(109,94,246,0.35); cursor: pointer; }
-
-  .btn { font-family: var(--sans); font-size: 0.98rem; font-weight: 700; padding: 0.9rem 1.2rem; border-radius: 14px; border: none; cursor: pointer; transition: transform 0.12s, box-shadow 0.2s; }
+  .btn { font-family: var(--sans); font-size: 0.98rem; font-weight: 700; padding: 0.9rem 1.2rem; border-radius: 14px; border: none; cursor: pointer; transition: transform 0.12s; }
   .btn:active { transform: scale(0.98); }
   .btn.solid { background: var(--ink); color: #fff; }
   .btn.grad { background: var(--grad); color: #fff; width: 100%; margin-top: 1rem; box-shadow: 0 8px 22px -8px rgba(109,94,246,0.7); }
   .btn.grad:disabled { opacity: 0.35; box-shadow: none; cursor: default; }
   .btn.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); display: block; margin: 1.6rem auto 0; }
-  .btn.sm { padding: 0.72rem 1.05rem; font-size: 0.88rem; }
+  .btn.sm { padding: 0.7rem 1rem; font-size: 0.85rem; }
   .back { background: none; border: none; font-family: var(--sans); font-size: 0.84rem; color: var(--sub); cursor: pointer; padding: 0.3rem 0; margin-bottom: 0.3rem; }
-  .back:hover { color: var(--ink); }
-
+  .seg { display: inline-flex; background: #f0eff5; border: 1px solid var(--line-soft); border-radius: 12px; padding: 3px; gap: 3px; }
+  .seg-btn { font-family: var(--sans); font-size: 0.84rem; font-weight: 650; padding: 0.45rem 1.1rem; border-radius: 9px; border: none; background: none; color: var(--sub); cursor: pointer; }
+  .seg-btn.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(14,14,18,0.1); }
   .styles { display: flex; flex-wrap: wrap; gap: 0.45rem; }
-  .style { font-family: var(--sans); font-size: 0.84rem; font-weight: 600; padding: 0.55rem 0.9rem; border-radius: 11px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; transition: 0.14s; }
+  .style { font-family: var(--sans); font-size: 0.84rem; font-weight: 600; padding: 0.55rem 0.9rem; border-radius: 11px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; }
   .style .em { display: block; font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.1em; color: var(--sub); text-transform: uppercase; margin-top: 0.1rem; }
   .style.on { border-color: transparent; background: var(--ink); color: #fff; } .style.on .em { color: rgba(255,255,255,0.6); }
-
-  .seg { display: inline-flex; background: #f0eff5; border: 1px solid var(--line-soft); border-radius: 12px; padding: 3px; gap: 3px; }
-  .seg-btn { font-family: var(--sans); font-size: 0.84rem; font-weight: 650; padding: 0.45rem 1.1rem; border-radius: 9px; border: none; background: none; color: var(--sub); cursor: pointer; transition: 0.14s; }
-  .seg-btn.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(14,14,18,0.1); }
-
-  .drop { border: 1.5px dashed var(--line); border-radius: 16px; padding: 1.8rem 1rem; text-align: center; cursor: pointer; transition: 0.15s; background: #fff; }
+  .drop { border: 1.5px dashed var(--line); border-radius: 16px; padding: 1.8rem 1rem; text-align: center; cursor: pointer; background: #fff; }
   .drop.over, .drop:active { border-color: var(--a1); background: #faf9ff; }
   .drop .ic { font-size: 1.6rem; } .drop .big { font-weight: 700; font-size: 0.98rem; margin-top: 0.35rem; } .drop .sub { font-size: 0.76rem; color: var(--sub); margin-top: 0.25rem; }
   .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: 0.5rem; margin-top: 0.9rem; }
@@ -73,7 +110,6 @@
   .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .thumb .idx { position: absolute; left: 5px; bottom: 5px; font-family: var(--mono); font-size: 0.6rem; font-weight: 600; background: rgba(14,14,18,0.72); color: #fff; padding: 0.05rem 0.35rem; border-radius: 5px; }
   .thumb .x { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 7px; border: none; background: rgba(14,14,18,0.78); color: #fff; font-size: 13px; line-height: 20px; cursor: pointer; }
-
   .row-between { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; margin-top: 0.9rem; }
   .toggle { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; color: var(--sub); cursor: pointer; user-select: none; }
   .toggle input { display: none; }
@@ -82,54 +118,26 @@
   .toggle input:checked + .track { background: var(--a1); }
   .toggle input:checked + .track::after { transform: translateX(16px); }
 
-  /* landing */
-  #landing { display: none; }
-  .demo-note { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--sub); margin: 0 0.15rem 0.7rem; }
-
   #loading { display: none; text-align: center; padding: 3.5rem 0; } #loading.on { display: block; }
   .loader { width: 44px; height: 44px; margin: 0 auto 1.1rem; border-radius: 50%; background: conic-gradient(var(--a1), var(--a2), transparent 75%);
     -webkit-mask: radial-gradient(farthest-side, transparent 60%, #000 62%); mask: radial-gradient(farthest-side, transparent 60%, #000 62%); animation: sp 0.9s linear infinite; }
-  @keyframes sp { to { transform: rotate(360deg); } }
   #loadmsg { font-size: 0.88rem; color: var(--sub); }
-
-  #setup { display: none; }
-  #results { display: none; } #results.on { display: block; }
   .items-wrap { display: flex; flex-wrap: wrap; gap: 0.4rem; }
   .chip { font-size: 0.76rem; padding: 0.35rem 0.7rem; border-radius: 10px; background: #fff; border: 1px solid var(--line-soft); } .chip b { color: var(--a1); }
-
-  .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.6rem 1.4rem; align-items: start; margin-top: 0.2rem; }
-  .look { background: transparent; border: none; border-radius: 0; overflow: visible; box-shadow: none; }
-  .look-head { padding: 0.2rem 0.15rem 0.7rem; }
-  .look-scene { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text; font-weight: 700; }
-  .look-title { font-size: 1.5rem; font-weight: 780; letter-spacing: -0.02em; margin-top: 0.2rem; line-height: 1.1; }
-  .illus { margin: 0; border-radius: 14px; overflow: hidden; background: radial-gradient(120% 90% at 50% 0%, #fbfaff 0%, #f1eff7 100%); aspect-ratio: 4/5; display: flex; align-items: center; justify-content: center; position: relative; }
-  .illus img { width: 100%; height: 100%; display: block; object-fit: cover; cursor: zoom-in; }
-  .illus svg { width: 100%; height: 100%; display: block; }
-  .illus .mini-loader { width: 30px; height: 30px; border-radius: 50%; background: conic-gradient(var(--a1), var(--a2), transparent 75%);
-    -webkit-mask: radial-gradient(farthest-side, transparent 58%, #000 60%); mask: radial-gradient(farthest-side, transparent 58%, #000 60%); animation: sp 0.9s linear infinite; }
-  .illus .fail { font-size: 0.78rem; color: var(--sub); padding: 1.2rem; text-align: center; line-height: 1.6; }
-  .sample-tag { position: absolute; top: 8px; left: 8px; font-family: var(--mono); font-size: 0.54rem; letter-spacing: 0.14em; background: rgba(14,14,18,0.55); color: #fff; padding: 0.16rem 0.45rem; border-radius: 6px; }
-  .look-body { padding: 0.85rem 0.15rem 0; }
-  .look-comment { font-size: 0.92rem; line-height: 1.7; }
   .ref-label { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--sub); margin: 0.9rem 0 0.4rem; }
   .refs { display: flex; gap: 0.4rem; flex-wrap: wrap; }
   .ref { width: 44px; aspect-ratio: 3/4; border-radius: 8px; overflow: hidden; border: 1px solid var(--line-soft); }
   .ref img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .look-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.85rem; }
-  .tag { font-size: 0.72rem; padding: 0.25rem 0.6rem; border-radius: 8px; background: #f4f3f9; color: var(--sub); }
-  .tag.add { background: rgba(109,94,246,0.1); color: var(--a1); font-weight: 600; }
-
   .err { font-size: 0.82rem; color: #B4231C; background: #FDECEA; border: 1px solid #F6C9C5; border-radius: 12px; padding: 0.75rem 0.9rem; margin-top: 0.9rem; line-height: 1.6; display: none; } .err.on { display: block; }
   footer { text-align: center; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.06em; color: var(--sub); margin-top: 2.4rem; line-height: 1.9; text-transform: uppercase; }
-
   #lightbox { position: fixed; inset: 0; z-index: 100; background: rgba(12,12,16,0.93); display: none; align-items: center; justify-content: center; padding: 2.5vw; cursor: zoom-out; }
   #lightbox.on { display: flex; }
   #lightbox img { max-width: 100%; max-height: 100%; border-radius: 10px; box-shadow: 0 24px 70px rgba(0,0,0,0.55); }
   #lightbox .close { position: absolute; top: 1.2rem; right: 1.4rem; color: #fff; font-size: 1.6rem; opacity: 0.7; }
-
-  @media (max-width: 480px){
-    .topbar { padding-bottom: 1.1rem; }
-    .topbar .btn { padding: 0.6rem 0.85rem; font-size: 0.82rem; }
+  .section-gap { margin-top: 2.2rem; }
+  @media (max-width: 640px){
+    .topbar { gap: 0.6rem; }
+    .topbar .cta { margin-left: 0; width: 100%; order: 3; }
   }
 </style>
 </head>
@@ -138,21 +146,44 @@
 <div class="wrap">
 
   <header class="topbar">
-    <button class="brand" onclick="showLanding()">Match <span class="g">My</span> Fit</button>
-    <button class="btn solid sm" id="topcta" onclick="showSetup()">自分の服で試す →</button>
+    <button class="brand" onclick="showView('looks')">Match <span class="g">My</span> Fit</button>
+    <nav class="nav" id="nav">
+      <button data-v="looks" class="on" onclick="showView('looks')">季節のコーデ</button>
+      <button data-v="all" onclick="showView('all')">コーデ100</button>
+      <button data-v="items" onclick="showView('items')">アイテム100</button>
+    </nav>
+    <button class="btn solid sm cta" id="topcta" onclick="showView('setup')">自分の服で試す →</button>
   </header>
 
-  <!-- LANDING : random sample looks -->
-  <div id="landing">
-    <div class="demo-note" id="demo-note">お試し例（ランダム表示）</div>
-    <div id="demo" class="gallery"></div>
+  <!-- 季節のコーデ -->
+  <div id="looks-view">
+    <div class="season-bar" id="season-bar"></div>
+    <div id="season-cards" class="gallery wide3"></div>
+    <div id="mine-section" class="section-gap" style="display:none">
+      <div class="cat-title">あなたの前回のコーデ（写真アップから）</div>
+      <div id="mine-cards" class="gallery wide3"></div>
+    </div>
   </div>
 
-  <!-- SETUP : keys + upload -->
-  <div id="setup">
-    <div class="stack">
-      <button class="back" onclick="showLanding()">← 見本に戻る</button>
+  <!-- コーデ100 -->
+  <div id="all-view" style="display:none">
+    <div class="search-bar">
+      <input type="text" id="q" placeholder="検索：紺ブレ / ミリタリー / タートル / NB …" oninput="renderAll()">
+      <span class="count" id="all-count"></span>
+    </div>
+    <div id="all-cards" class="gallery"></div>
+  </div>
 
+  <!-- アイテム100 -->
+  <div id="items-view" style="display:none">
+    <div class="count" id="items-count"></div>
+    <div id="items-list"></div>
+  </div>
+
+  <!-- 自分の服で試す（プレミアム） -->
+  <div id="setup" style="display:none">
+    <div class="stack">
+      <button class="back" onclick="showView('looks')">← コーデ一覧に戻る</button>
       <div class="card" id="sec-key">
         <div class="step"><span class="n">1</span> APIキー（初回のみ・2つ）</div>
         <div class="keyfield">
@@ -171,7 +202,6 @@
         </div>
         <p class="hint">両方とも <b>ブラウザ内だけ</b>に保存され、各社へ直接送信されます（サーバー非経由）。Claudeは <span class="link" onclick="window.open('https://console.anthropic.com/settings/keys','_blank')">console.anthropic.com</span>、Geminiは <span class="link" onclick="window.open('https://aistudio.google.com/apikey','_blank')">aistudio.google.com/apikey</span> で発行（画像生成は従量課金の有効化が必要）。</p>
       </div>
-
       <div class="card" id="sec-up">
         <div class="step"><span class="n">2</span> 性別とテイスト</div>
         <div class="seg" id="gender">
@@ -203,195 +233,202 @@
     <div id="loadmsg">手持ちを解析中…</div>
   </div>
 
-  <div id="results">
+  <div id="results" style="display:none">
     <div class="stack">
       <div class="card">
         <div class="step"><span class="n">◆</span> あなたのアイテム</div>
-        <div class="items-wrap" id="items"></div>
+        <div class="items-wrap" id="uitems"></div>
       </div>
       <div class="step" style="margin:1.7rem 0 0.2rem"><span class="n grad">◆</span> <span id="res-style-label">提案</span></div>
     </div>
-    <div id="looks" class="gallery"></div>
-    <div class="stack"><button class="btn ghost" onclick="reset()">別の服・テイストでもう一度</button></div>
+    <div id="ulooks" class="gallery wide3"></div>
+    <div class="stack"><button class="btn ghost" onclick="resetUpload()">別の服・テイストでもう一度</button></div>
   </div>
 
-  <footer>Match My Fit · Powered by Claude + Gemini · Photos & keys never leave your device</footer>
+  <footer>Match My Fit · Basic 100 Wardrobe · Powered by Claude + Gemini</footer>
 </div>
 
 <div id="lightbox" onclick="closeLb()"><span class="close">×</span><img id="lb-img" alt=""></div>
 
+<script src="data.js"></script>
 <script>
-const KEY_LS = 'coordmatch_apikey';
-const GKEY_LS = 'coordmatch_gkey';
-let files = [];
-let styleKey = 'ivy';
-let gender = 'mens';
-function genderJP(){ return gender==='mens' ? 'メンズ' : 'ウィメンズ'; }
-
-const LAST_LS = 'coordmatch_last';
-let lastSession = null;
-function persistLast(){ if(!lastSession) return; try { localStorage.setItem(LAST_LS, JSON.stringify(lastSession)); } catch(e){} }
-function loadLast(){ try { const s = localStorage.getItem(LAST_LS); return s ? JSON.parse(s) : null; } catch(e){ return null; } }
-
-const STYLES = {
-  ivy:     { label: 'アイビー',   em: 'IVY / PREPPY',
-    persona: 'アイビー／プレッピー（オックスフォードBDシャツ、レジメンタルタイ、シェットランドニット、チノ／グレーフラノ、ブレザー、ローファー、ネイビー×オフホワイト×カレッジカラー）',
-    palette: 'ネイビー、オフホワイト、ベージュ、ボルドー、フォレストグリーン' },
-  kireime: { label: 'きれいめ',   em: 'CLEAN / MINIMAL',
-    persona: 'きれいめ大人カジュアル（上質な無地、ジャストサイズ、ニュートラルカラー、とろみ素材、ミニマルで清潔感）',
-    palette: 'グレージュ、ホワイト、ブラック、チャコール、くすみブルー' },
-  vintage: { label: '古着MIX',    em: 'VINTAGE / THRIFT',
-    persona: '古着MIX（70s〜90sのビンテージ、色柄の効かせ、レイヤード、抜けとサイズ感の遊び）',
-    palette: 'マスタード、ブラウン、レンガ、モスグリーン、生成り' },
-  mode:    { label: 'モード',     em: 'MODE / AVANT',
-    persona: 'モード（モノトーン中心、建築的シルエット、ロング丈やレイヤー、シャープで洗練）',
-    palette: 'ブラック、ホワイト、グレー、わずかな差し色' },
-  street:  { label: 'ストリート', em: 'STREET',
-    persona: 'ストリート（オーバーサイズ、スニーカー主役、スウェット／カーゴ、ロゴやグラフィック）',
-    palette: 'ブラック、グレー、鮮やかな差し色、生成り' },
-  french:  { label: 'フレンチ',   em: 'FRENCH CASUAL',
-    persona: 'フレンチカジュアル（マリニエール、デニム、トレンチ、抜け感のあるパリジェンヌ）',
-    palette: 'ネイビー、ホワイト、生成り、赤の差し色、インディゴ' }
-};
-function renderStyles(){
-  document.getElementById('styles').innerHTML = Object.entries(STYLES).map(([k,s]) =>
-    `<button class="style ${k===styleKey?'on':''}" onclick="pickStyle('${k}')">${s.label}<span class="em">${s.em}</span></button>`).join('');
+/* ---------- catalog helpers ---------- */
+const IMAP = {}; CATALOG.forEach(it => IMAP[it.id] = it);
+function iname(id){ return IMAP[id] ? IMAP[id].n : id; }
+function comboPieces(c){
+  const ids = [...(c.i||[])]; if(c.o) ids.push(c.o); ids.push(c.p, c.f, c.b, ...(c.x||[]));
+  return ids.filter(Boolean);
 }
-function pickStyle(k){ styleKey = k; renderStyles(); }
-function pickGender(g){ gender = g;
-  document.querySelectorAll('#gender .seg-btn').forEach(b => b.classList.toggle('on', b.dataset.g===g));
-  renderLanding(); }
+const CMAP = {}; COMBOS.forEach(c => CMAP[c.n] = c);
 
-/* ---------- view switching ---------- */
+/* ---------- views ---------- */
+const VIEWS = ['looks','all','items','setup','loading','results'];
 function showView(v){
-  document.getElementById('landing').style.display = (v==='landing') ? 'block' : 'none';
-  document.getElementById('setup').style.display   = (v==='setup')   ? 'block' : 'none';
-  document.getElementById('loading').classList.toggle('on', v==='loading');
-  document.getElementById('results').classList.toggle('on', v==='results');
-  document.getElementById('topcta').style.display = (v==='landing') ? '' : 'none';
-  window.scrollTo({ top:0, behavior:'smooth' });
-}
-function showLanding(){ renderLanding(); showView('landing'); }
-function showSetup(){ showView('setup'); }
-
-/* ---------- sample looks (landing) ---------- */
-const SAMPLES = [
-  // ---- MENS ----
-  { g:'mens', scene:'CAMPUS DAY',  title:'王道アイビーの基本形', comment:'ニットの下からシャツの襟をのぞかせ、袖をまくって抜けを。', tags:['BDシャツ','シェットランド','チノ','＋ローファー'], pal:['#2f3c5c','#d8cbb2','#7a2f28'] },
-  { g:'mens', scene:'CLEAN OFFICE',title:'端正なきれいめ',      comment:'色数を絞って素材で見せる。艶の革靴で全体を締めて。',   tags:['白シャツ','グレースラックス','＋ネイビージャケット'], pal:['#3a3f4a','#e7e4dd','#9aa7b3'] },
-  { g:'mens', scene:'WEEKEND OUT', title:'古着MIXの休日',       comment:'差し色は一点だけ。トーンを合わせて大人の抜け感に。',   tags:['ビンテージニット','デニム','＋ローテクスニーカー'], pal:['#8a5a2b','#caa46a','#3e4a36'] },
-  { g:'mens', scene:'NIGHT MODE',  title:'モードな一着主義',     comment:'黒で構築し、ロング丈で縦を強調。小物まで黒で通す。',   tags:['ブラックコート','スラックス','＋レザーシューズ'], pal:['#17181c','#3a3b40','#c9c9cf'] },
-  { g:'mens', scene:'CITY STREET', title:'こなれストリート',     comment:'オーバーサイズは足元をすっきり。ワントーンで today 感。', tags:['スウェット','カーゴ','＋ハイテクスニーカー'], pal:['#26262b','#7c7c84','#aef04e'] },
-  { g:'mens', scene:'RAINY DAY',   title:'トレンチの余裕',       comment:'ベージュのトレンチで即・大人。中はシンプルに徹する。', tags:['トレンチ','ニット','＋革靴'], pal:['#b8a888','#2f3c5c','#5a4632'] },
-  { g:'mens', scene:'SUNDAY OFF',  title:'ニット×デニムの休息',  comment:'足し算しすぎない。白スニーカーで軽さを添えて。',       tags:['ケーブルニット','デニム','＋白スニーカー'], pal:['#3e5a44','#31406b','#efe9db'] },
-  { g:'mens', scene:'GALLERY',     title:'モノトーンの知性',     comment:'グレーの濃淡で奥行きを。素材差で単調を避ける。',       tags:['グレーニット','ブラックパンツ'], pal:['#6a6a72','#1b1b1f','#e6e6ea'] },
-  { g:'mens', scene:'SEASIDE AM',  title:'リネンの軽やかさ',     comment:'白×水色で清潔感。素足に革サンダルで抜けを。',         tags:['リネンシャツ','ベージュパンツ','＋レザーサンダル'], pal:['#eef1f4','#9ec2d8','#d9caa8'] },
-  // ---- WOMENS ----
-  { g:'womens', scene:'ATELIER',      title:'端正なワントーン',   comment:'同系色で重ねて洗練を。足元はポインテッドで締める。',   tags:['とろみブラウス','テーパードパンツ','＋パンプス'], pal:['#b7afa2','#efece5','#8f8375'] },
-  { g:'womens', scene:'FLOWER MARKET',title:'フレンチな抜け',     comment:'ボーダーにデニム。差し色を一点だけ効かせて上品に。',   tags:['ボーダー','デニム','＋バレエシューズ'], pal:['#26324f','#eceae3','#b23b34'] },
-  { g:'womens', scene:'BOOKSTORE',    title:'きれいめニットの日', comment:'キャメルで上品に。細見えのIラインを意識して。',       tags:['キャメルニット','ロングスカート','＋ローファー'], pal:['#b98a52','#efe7d8','#6b4a2c'] },
-  { g:'womens', scene:'GALLERY NIGHT',title:'モードの陰影',       comment:'黒のレイヤードで陰影を。シルバー小物で引き締める。',   tags:['ブラックワンピ','ロングコート','＋レザーブーツ'], pal:['#17181c','#3a3b40','#c9c9cf'] },
-  { g:'womens', scene:'PARK STROLL',  title:'古着ワンピの休日',   comment:'アースカラーで季節感。カゴやスニーカーで肩の力を抜く。', tags:['プリントワンピ','カーディガン','＋スニーカー'], pal:['#a55a34','#caa46a','#5c6b3e'] },
-  { g:'womens', scene:'STUDIO DAY',   title:'リラクシングセット', comment:'くすみ色のセットアップで今っぽく。白で軽さを。',       tags:['スウェット上下','＋白スニーカー'], pal:['#8f8aa0','#c9c2d8','#efeef2'] },
-  { g:'womens', scene:'CITY POP',     title:'差し色ストリート',   comment:'黒ベースにピンクを効かせて。甘辛のバランスで。',       tags:['ロゴT','カーゴスカート','＋ハイテクスニーカー'], pal:['#232327','#c96f96','#7c7c84'] },
-  { g:'womens', scene:'GOLDEN HOUR',  title:'やわらかレイヤード', comment:'テラコッタ×生成りで温かく。透け素材で軽やかに。',     tags:['シアーブラウス','ロングスカート','＋サンダル'], pal:['#b5623b','#efe6d5','#7a5236'] },
-  { g:'womens', scene:'RIVERSIDE',    title:'デニム×白の定番',    comment:'インディゴに白で清潔感。まくり袖でこなれを出す。',     tags:['白シャツ','ストレートデニム','＋ローファー'], pal:['#31406b','#eef0f2','#cbb996'] }
-];
-/* flat-lay outfit illustration drawn from the palette (top / bottom / shoes) */
-function outfitTop(kind, c, c2, ink){
-  if(kind==='dress'){
-    return `<path d="M124 78 L150 66 Q160 74 176 78 L172 150 Q210 250 224 300 L76 300 Q90 250 128 150 Z" fill="${c}"/>
-      <path d="M124 78 L100 108 L86 148 L104 156 L128 118" fill="${c}"/>
-      <path d="M176 78 L200 108 L214 148 L196 156 L172 118" fill="${c}"/>
-      <path d="M138 78 Q150 92 162 78" fill="${c2}" stroke-width="1.8"/>`;
-  }
-  if(kind==='coat'){
-    return `<path d="M118 80 L96 110 L82 156 L102 166 L118 130 Z" fill="${c}"/>
-      <path d="M182 80 L204 110 L218 156 L198 166 L182 130 Z" fill="${c}"/>
-      <path d="M118 80 Q150 66 182 80 L180 250 L120 250 Z" fill="${c}"/>
-      <path d="M150 80 L150 250" stroke-width="1.8"/>
-      <path d="M132 82 L150 108 L168 82" fill="${c2}" stroke-width="1.8"/>
-      <circle cx="150" cy="150" r="2.4" fill="${ink}" stroke="none"/><circle cx="150" cy="176" r="2.4" fill="${ink}" stroke="none"/>`;
-  }
-  /* sweater (default) */
-  return `<path d="M114 84 L66 112 L82 158 L114 148 Z" fill="${c}"/>
-    <path d="M186 84 L234 112 L218 158 L186 148 Z" fill="${c}"/>
-    <path d="M114 84 Q150 70 186 84 L182 186 L118 186 Z" fill="${c}"/>
-    <path d="M132 84 Q150 104 168 84" fill="${c2}" stroke-width="1.8"/>`;
-}
-function outfitBottom(kind, c, ink){
-  if(kind==='dress') return '';
-  if(kind==='skirt'){
-    return `<path d="M120 200 L180 200 L200 300 L100 300 Z" fill="${c}"/><rect x="118" y="192" width="64" height="12" rx="4" fill="${c}"/>`;
-  }
-  /* trousers */
-  return `<rect x="120" y="194" width="60" height="12" rx="4" fill="${c}"/>
-    <path d="M122 206 L148 206 L145 322 L124 322 L116 220 Z" fill="${c}"/>
-    <path d="M152 206 L178 206 L184 220 L176 322 L155 322 Z" fill="${c}"/>`;
-}
-function outfitShoes(y, ink){
-  return `<path d="M112 ${y} q-6 20 14 20 h22 q6 0 6 -8 v-8 q0 -4 -6 -4 h-22 q-9 0 -14 8Z" fill="${ink}"/>
-    <path d="M188 ${y} q6 20 -14 20 h-22 q-6 0 -6 -8 v-8 q0 -4 6 -4 h22 q9 0 14 8Z" fill="${ink}"/>`;
-}
-function demoArt(pal, i, meta){
-  const [c1, c2, c3] = pal, ink = '#33333a';
-  const top = (meta && meta.top) || 'sweater';
-  const bottom = (meta && meta.bottom) || 'trousers';
-  const dress = top === 'dress';
-  const shoesY = dress ? 326 : 330;
-  return `<svg viewBox="0 0 300 375" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
-    <rect width="300" height="375" fill="#f6f3ee"/>
-    <g stroke="${ink}" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round">
-      ${dress ? '' : outfitBottom(bottom, c3, ink)}
-      ${outfitTop(top, c1, c2, ink)}
-      ${outfitShoes(shoesY, ink)}
-    </g>
-  </svg>`;
-}
-function outfitKind(s){
-  const t = s.tags.join('');
-  if(/ワンピ|ドレス/.test(t)) return { top:'dress' };
-  return { top: /コート|トレンチ/.test(t) ? 'coat' : 'sweater',
-           bottom: /スカート/.test(t) ? 'skirt' : 'trousers' };
-}
-function demoCard(s, i){
-  const tags = s.tags.map(t => t.indexOf('＋')===0 ? `<span class="tag add">${esc(t)}</span>` : `<span class="tag">${esc(t)}</span>`).join('');
-  return `<div class="look">
-    <div class="look-head"><div class="look-scene">${esc(s.scene)}</div><div class="look-title">${esc(s.title)}</div></div>
-    <div class="illus">${demoArt(s.pal, i, outfitKind(s))}<span class="sample-tag">SAMPLE</span></div>
-    <div class="look-body"><p class="look-comment">${esc(s.comment)}</p><div class="look-tags">${tags}</div></div>
-  </div>`;
-}
-function renderDemo(){
-  const pool = SAMPLES.filter(s => s.g === gender);
-  for(let j=pool.length-1; j>0; j--){ const k=Math.floor(Math.random()*(j+1)); const t=pool[j]; pool[j]=pool[k]; pool[k]=t; }
-  document.getElementById('demo').innerHTML = pool.slice(0,3).map((s,i) => demoCard(s,i)).join('');
+  VIEWS.forEach(k => {
+    const el = document.getElementById(k === 'looks' ? 'looks-view' : k === 'all' ? 'all-view' : k === 'items' ? 'items-view' : k);
+    if(!el) return;
+    if(k === 'loading'){ el.classList.toggle('on', v === 'loading'); }
+    else el.style.display = (k === v) ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  document.getElementById('topcta').style.display = (v==='looks'||v==='all'||v==='items') ? '' : 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* landing prefers the last generated (real) look set, else shows samples */
-function memoryCard(l){
-  const tags = (l.use||[]).map(u=>`<span class="tag">${esc(u)}</span>`).join('')
-    + (l.add||[]).map(a=>`<span class="tag add">＋${esc(a)}</span>`).join('');
+/* ---------- look cards ---------- */
+function tagsHTML(c){
+  const t = [];
+  (c.i||[]).forEach(id => t.push(`<span class="tag" title="${id}">${esc(iname(id))}</span>`));
+  if(c.o) t.push(`<span class="tag ou" title="${c.o}">${esc(iname(c.o))}</span>`);
+  [c.p, c.f, c.b, ...(c.x||[])].filter(Boolean).forEach(id => t.push(`<span class="tag" title="${id}">${esc(iname(id))}</span>`));
+  return t.join('');
+}
+function lookCardHTML(c, note){
   return `<div class="look">
-    <div class="look-head"><div class="look-scene">${esc(l.scene)}</div><div class="look-title">${esc(l.title)}</div></div>
-    <div class="illus"><img src="${l.img}" alt=""></div>
-    <div class="look-body"><p class="look-comment">${esc(l.comment)}</p><div class="look-tags">${tags}</div></div>
+    <div class="look-head">
+      <div class="look-scene">${esc(c.s)}</div>
+      <div class="look-title">${esc(c.t)}<span class="look-no">#${c.n}</span></div>
+    </div>
+    <div class="illus" id="cillus-${c.n}"><div class="mini-loader"></div></div>
+    <div class="look-body">
+      ${note ? `<p class="look-note">${esc(note)}</p>` : ''}
+      <div class="look-tags">${tagsHTML(c)}</div>
+    </div>
   </div>`;
 }
-function renderLanding(){
+
+/* illustration resolution: cache → bundled looks/{n}.jpg → generate button */
+function setIllusImg(box, src, withDl, n){
+  box.innerHTML = '';
+  const img = new Image();
+  img.onload = () => { box.appendChild(img); if(withDl){ const a = document.createElement('a'); a.className='dl'; a.textContent='⬇ 保存'; a.href = src; a.download = `${n}.jpg`; box.appendChild(a); } };
+  img.onclick = () => openLb(src);
+  img.src = src;
+}
+function initLookImg(n){
+  const box = document.getElementById('cillus-' + n);
+  if(!box) return;
+  const cached = lsGet('mmf_cimg_' + n);
+  if(cached){ setIllusImg(box, cached, true, n); return; }
+  const probe = new Image();
+  probe.onload = () => setIllusImg(box, 'looks/' + n + '.jpg', false, n);
+  probe.onerror = () => {
+    box.innerHTML = `<button class="genb" onclick="genLookIllus(${n})">イラストを生成</button><div class="gen-hint">Geminiキーで1回だけ生成（約$0.04）・端末に保存されます</div>`;
+  };
+  probe.src = 'looks/' + n + '.jpg';
+}
+function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+function lsSet(k, v){ try { localStorage.setItem(k, v); return true; } catch(e){ return false; } }
+
+const GEMINI_MODEL = 'gemini-2.5-flash-image';
+function catalogPrompt(c){
+  const names = comboPieces(c).map(iname);
+  return `A full-length editorial fashion illustration in the style of hand-drawn ink linework with loose, expressive watercolor washes — a magazine fashion croquis, elegant and refined.
+Single male figure, full body from head to toe, natural relaxed standing pose, clean off-white paper background.
+He wears this outfit (Japanese city-boy / American traditional / military mix): ${names.join('、')}.
+Style mood: ${c.s} — ${c.t}. Muted palette true to the garments' real colours. No text, no captions, no borders, no logos. Single figure only.`;
+}
+async function genLookIllus(n){
+  const box = document.getElementById('cillus-' + n);
+  const c = CMAP[n];
+  if(!box || !c) return;
+  const gkey = localStorage.getItem(GKEY_LS);
+  if(!gkey){
+    box.innerHTML = `<div class="fail">イラスト生成には Gemini キーが必要です。<br><span class="link" onclick="showView('setup')">「自分の服で試す」画面</span>の②で保存してください。</div>`;
+    return;
+  }
+  box.innerHTML = '<div class="mini-loader"></div>';
+  try {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=` + encodeURIComponent(gkey),
+      { method:'POST', headers:{ 'content-type':'application/json' },
+        body: JSON.stringify({ contents:[{ role:'user', parts:[{ text: catalogPrompt(c) }] }] }) });
+    const data = await r.json();
+    if(!r.ok) throw new Error((data && data.error && data.error.message) || ('HTTP ' + r.status));
+    const cparts = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [];
+    const ip = cparts.find(p => (p.inlineData && p.inlineData.data) || (p.inline_data && p.inline_data.data));
+    const inl = ip && (ip.inlineData || ip.inline_data);
+    if(!inl) throw new Error(cparts.map(p=>p.text).filter(Boolean).join(' ') || '画像が返りませんでした');
+    const raw = 'data:' + (inl.mimeType || inl.mime_type || 'image/png') + ';base64,' + inl.data;
+    // compress for cache
+    const img = new Image();
+    img.onload = () => {
+      let src = raw;
+      try {
+        const mx = 720, sc = Math.min(1, mx / Math.max(img.naturalWidth, img.naturalHeight));
+        const cv = document.createElement('canvas');
+        cv.width = Math.round(img.naturalWidth * sc); cv.height = Math.round(img.naturalHeight * sc);
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+        src = cv.toDataURL('image/jpeg', 0.85);
+        lsSet('mmf_cimg_' + n, src);
+      } catch(e){}
+      setIllusImg(box, src, true, n);
+    };
+    img.onerror = () => { box.innerHTML = '<div class="fail">画像を表示できませんでした</div>'; };
+    img.src = raw;
+  } catch(e){
+    box.innerHTML = `<div class="fail">生成に失敗：${esc(String(e.message||e)).slice(0,140)}<br><button class="genb" style="margin-top:0.6rem" onclick="genLookIllus(${n})">もう一度</button></div>`;
+  }
+}
+
+/* ---------- 季節のコーデ ---------- */
+let curSeason = (function(){ const m = new Date().getMonth() + 1;
+  return m >= 3 && m <= 5 ? 'spring' : m >= 6 && m <= 8 ? 'summer' : m >= 9 && m <= 11 ? 'autumn' : 'winter'; })();
+function renderSeasonBar(){
+  const bar = document.getElementById('season-bar');
+  bar.innerHTML = Object.entries(SEASONAL).map(([k, se]) =>
+    `<button class="stab ${k===curSeason?'on':''}" onclick="pickSeason('${k}')">${se.label}</button>`).join('')
+    + '<span class="snote">季節ごとに3スタイル · ベーシック100から</span>';
+}
+function pickSeason(k){ curSeason = k; renderLooks(); }
+function renderLooks(){
+  renderSeasonBar();
+  const picks = SEASONAL[curSeason].picks;
+  document.getElementById('season-cards').innerHTML = picks.map(p => lookCardHTML(CMAP[p.n], p.note)).join('');
+  picks.forEach(p => initLookImg(p.n));
+  renderMine();
+}
+function renderMine(){
   const last = loadLast();
-  const note = document.getElementById('demo-note');
+  const sec = document.getElementById('mine-section');
   if(last && last.looks && last.looks.some(l => l.img)){
-    note.textContent = '前回のコーデ' + (last.styleLabel ? ' · ' + last.styleLabel : '');
-    document.getElementById('demo').innerHTML = last.looks.filter(l => l.img).map(memoryCard).join('');
-    document.querySelectorAll('#demo .illus img').forEach(im => { im.onclick = () => openLb(im.src); });
-  } else {
-    note.textContent = 'お試し例（ランダム表示）';
-    renderDemo();
-  }
+    sec.style.display = 'block';
+    document.getElementById('mine-cards').innerHTML = last.looks.filter(l => l.img).map(l => `
+      <div class="look">
+        <div class="look-head"><div class="look-scene">${esc(l.scene)}</div><div class="look-title">${esc(l.title)}</div></div>
+        <div class="illus"><img src="${l.img}" onclick="openLb(this.src)"></div>
+        <div class="look-body"><p class="look-note">${esc(l.comment)}</p></div>
+      </div>`).join('');
+  } else sec.style.display = 'none';
+}
+
+/* ---------- コーデ100（検索） ---------- */
+function renderAll(){
+  const q = (document.getElementById('q').value || '').trim().toLowerCase();
+  const hit = COMBOS.filter(c => {
+    if(!q) return true;
+    const hay = (c.n + ' ' + c.s + ' ' + c.t + ' ' + comboPieces(c).map(iname).join(' ')).toLowerCase();
+    return q.split(/\s+/).every(w => hay.includes(w));
+  });
+  document.getElementById('all-count').textContent = hit.length + ' / 100 コーデ';
+  document.getElementById('all-cards').innerHTML = hit.map(c => lookCardHTML(c, null)).join('');
+  hit.forEach(c => initLookImg(c.n));
+}
+
+/* ---------- アイテム100 ---------- */
+function renderItems(){
+  const cats = [];
+  CATALOG.forEach(it => { if(!cats.includes(it.c)) cats.push(it.c); });
+  document.getElementById('items-count').textContent = CATALOG.length + ' items';
+  document.getElementById('items-list').innerHTML = cats.map(cat => {
+    const rows = CATALOG.filter(it => it.c === cat);
+    return `<div class="cat-group"><div class="cat-title">${esc(cat)} — ${rows.length}</div>
+      <div class="item-grid">${rows.map(it => `<div class="item-chip"><span class="iid">${it.id}</span>${esc(it.n)}</div>`).join('')}</div></div>`;
+  }).join('');
 }
 
 /* ---------- keys ---------- */
+const KEY_LS = 'coordmatch_apikey';
+const GKEY_LS = 'coordmatch_gkey';
 const KEYMAP = { a: { ls: KEY_LS, set: 'key-set-a', stat: 'kstat-a', inp: 'apikey' },
                  g: { ls: GKEY_LS, set: 'key-set-g', stat: 'kstat-g', inp: 'gkey' } };
 function refreshKeyUI(){
@@ -402,32 +439,68 @@ function refreshKeyUI(){
   }
 }
 function saveKey(which){ const m = KEYMAP[which]; const v = document.getElementById(m.inp).value.trim(); if(!v) return;
-  localStorage.setItem(m.ls, v); document.getElementById(m.inp).value=''; refreshKeyUI(); }
+  localStorage.setItem(m.ls, v); document.getElementById(m.inp).value = ''; refreshKeyUI(); }
 function clearKey(which){ localStorage.removeItem(KEYMAP[which].ls); refreshKeyUI(); }
 
-/* ---------- upload ---------- */
+/* ---------- 写真アップ（プレミアム） ---------- */
+let files = [];
+let styleKey = 'ivy';
+let gender = 'mens';
+function genderJP(){ return gender === 'mens' ? 'メンズ' : 'ウィメンズ'; }
+const LAST_LS = 'coordmatch_last';
+let lastSession = null;
+function persistLast(){ if(!lastSession) return; lsSet(LAST_LS, JSON.stringify(lastSession)); }
+function loadLast(){ try { const s = localStorage.getItem(LAST_LS); return s ? JSON.parse(s) : null; } catch(e){ return null; } }
+
+const STYLES = {
+  ivy:     { label: 'アイビー', em: 'IVY / PREPPY',
+    persona: 'アイビー／プレッピー（オックスフォードBDシャツ、シェットランドニット、チノ／グレーフラノ、ブレザー、ローファー、ネイビー×オフホワイト）',
+    palette: 'ネイビー、オフホワイト、ベージュ、ボルドー、フォレストグリーン' },
+  cityboy: { label: 'シティボーイ', em: 'CITY BOY / AH.H',
+    persona: 'シティボーイ（アメトラ基盤にワーク・ミリタリー・アウトドアをMIX、幅広シルエット、POPEYE的な抜け感）',
+    palette: 'ネイビー、生成り、オリーブ、グレー、黒' },
+  kireime: { label: 'きれいめ', em: 'CLEAN / MINIMAL',
+    persona: 'きれいめ大人カジュアル（上質な無地、ジャストサイズ、ニュートラルカラー、ミニマルで清潔感）',
+    palette: 'グレージュ、ホワイト、ブラック、チャコール、くすみブルー' },
+  vintage: { label: '古着MIX', em: 'VINTAGE / THRIFT',
+    persona: '古着MIX（70s〜90sのビンテージ、色柄の効かせ、レイヤード、抜けとサイズ感の遊び）',
+    palette: 'マスタード、ブラウン、レンガ、モスグリーン、生成り' },
+  mode:    { label: 'モード', em: 'MODE / AVANT',
+    persona: 'モード（モノトーン中心、建築的シルエット、ロング丈やレイヤー、シャープで洗練）',
+    palette: 'ブラック、ホワイト、グレー、わずかな差し色' },
+  street:  { label: 'ストリート', em: 'STREET',
+    persona: 'ストリート（オーバーサイズ、スニーカー主役、スウェット／カーゴ、ロゴやグラフィック）',
+    palette: 'ブラック、グレー、鮮やかな差し色、生成り' }
+};
+function renderStyles(){
+  document.getElementById('styles').innerHTML = Object.entries(STYLES).map(([k, s]) =>
+    `<button class="style ${k===styleKey?'on':''}" onclick="pickStyle('${k}')">${s.label}<span class="em">${s.em}</span></button>`).join('');
+}
+function pickStyle(k){ styleKey = k; renderStyles(); }
+function pickGender(g){ gender = g;
+  document.querySelectorAll('#gender .seg-btn').forEach(b => b.classList.toggle('on', b.dataset.g === g)); }
+
 const drop = document.getElementById('drop');
 document.getElementById('file').addEventListener('change', e => handleFiles(e.target.files));
 ['dragover','dragenter'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
 async function handleFiles(list){
-  for(const f of list){ if(files.length>=8) break; if(!f.type.startsWith('image/')) continue;
-    const b64 = await resizeToB64(f,1024); files.push({ b64, mediaType:'image/jpeg', url:'data:image/jpeg;base64,'+b64 }); }
+  for(const f of list){ if(files.length >= 8) break; if(!f.type.startsWith('image/')) continue;
+    const b64 = await resizeToB64(f, 1024); files.push({ b64, mediaType: 'image/jpeg', url: 'data:image/jpeg;base64,' + b64 }); }
   renderThumbs();
 }
 function renderThumbs(){
-  document.getElementById('thumbs').innerHTML = files.map((f,i)=>
+  document.getElementById('thumbs').innerHTML = files.map((f, i) =>
     `<div class="thumb"><img src="${f.url}"><span class="idx">${i+1}</span><button class="x" onclick="removeFile(${i})">×</button></div>`).join('');
-  document.getElementById('go').disabled = files.length===0;
+  document.getElementById('go').disabled = files.length === 0;
 }
-function removeFile(i){ files.splice(i,1); renderThumbs(); }
-function resizeToB64(file,max){ return new Promise((res,rej)=>{ const img=new Image();
-  img.onload=()=>{ const s=Math.min(1,max/Math.max(img.width,img.height)); const w=Math.round(img.width*s),h=Math.round(img.height*s);
-    const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h);
-    res(c.toDataURL('image/jpeg',0.85).split(',')[1]); }; img.onerror=rej; img.src=URL.createObjectURL(file); }); }
+function removeFile(i){ files.splice(i, 1); renderThumbs(); }
+function resizeToB64(file, max){ return new Promise((res, rej) => { const img = new Image();
+  img.onload = () => { const s = Math.min(1, max / Math.max(img.width, img.height)); const w = Math.round(img.width*s), h = Math.round(img.height*s);
+    const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h);
+    res(c.toDataURL('image/jpeg', 0.85).split(',')[1]); }; img.onerror = rej; img.src = URL.createObjectURL(file); }); }
 
-/* ---------- styling call (Claude) ---------- */
 const SCHEMA = { type:'object', properties:{
   items:{type:'array',items:{type:'object',properties:{name:{type:'string'},category:{type:'string'},color:{type:'string'}},required:['name','category','color'],additionalProperties:false}},
   coordinates:{type:'array',items:{type:'object',properties:{
@@ -435,7 +508,7 @@ const SCHEMA = { type:'object', properties:{
   },required:['title','scene','use','use_indexes','add','comment'],additionalProperties:false}}
 }, required:['items','coordinates'], additionalProperties:false };
 
-function buildSystem(){ const s=STYLES[styleKey];
+function buildSystem(){ const s = STYLES[styleKey];
   return `あなたは"${s.persona}"を専門とする一流スタイリストです。
 ユーザーの手持ち服の写真（順に1番からN番まで番号付き）を見て、それらを主役にした「${s.label}」の${genderJP()}（${gender==='mens'?'男性':'女性'}）コーディネートを日本語で提案します。
 - 提案は2〜3パターン。sceneは英語の短いラベル。
@@ -451,7 +524,7 @@ async function analyze(){
   const errEl = document.getElementById('err'); errEl.classList.remove('on');
   if(!key){ showErr('先に①Claudeキーを保存してください。'); return; }
   if(!gkey){ showErr('先に②Geminiキーを保存してください（イラスト生成に必要）。'); return; }
-  if(files.length===0) return;
+  if(files.length === 0) return;
 
   showView('loading');
   document.getElementById('loadmsg').textContent = STYLES[styleKey].label + 'で組んでいます…';
@@ -460,7 +533,7 @@ async function analyze(){
   const model = document.getElementById('eco').checked ? 'claude-haiku-4-5' : 'claude-opus-4-8';
   const userText = `これは私の手持ちアイテムの写真です（${files.length}枚、順に1〜${files.length}番）。これらを主役にした「${STYLES[styleKey].label}」の${genderJP()}コーディネートを提案してください。`
     + (note ? `\n好みメモ：${note}` : '');
-  const content = files.map(f=>({ type:'image', source:{ type:'base64', media_type:f.mediaType, data:f.b64 } }));
+  const content = files.map(f => ({ type:'image', source:{ type:'base64', media_type:f.mediaType, data:f.b64 } }));
   content.push({ type:'text', text:userText });
 
   try {
@@ -468,45 +541,43 @@ async function analyze(){
       body: JSON.stringify({ model, max_tokens:4000, system:buildSystem(), output_config:{format:{type:'json_schema',schema:SCHEMA}}, messages:[{role:'user',content}] }) });
     if(!resp.ok){ throw new Error(`APIエラー (${resp.status})：${(await resp.text()).slice(0,200)}`); }
     const data = await resp.json();
-    if(data.stop_reason==='refusal'){ throw new Error('この画像では提案を作れませんでした。別の写真でお試しください。'); }
-    const tb = (data.content||[]).find(b=>b.type==='text');
+    if(data.stop_reason === 'refusal'){ throw new Error('この画像では提案を作れませんでした。別の写真でお試しください。'); }
+    const tb = (data.content || []).find(b => b.type === 'text');
     if(!tb){ throw new Error('応答を解析できませんでした。'); }
     const parsed = JSON.parse(tb.text);
-    renderResults(parsed);
+    renderUserResults(parsed);
     showView('results');
     lastSession = { gender, styleLabel: STYLES[styleKey].label, savedAt: Date.now(),
-      looks: (parsed.coordinates||[]).map(c => ({ scene:c.scene, title:c.title, comment:c.comment, use:c.use||[], add:c.add||[], img:null })) };
-    (parsed.coordinates||[]).forEach((c,i)=> drawLook(c, i));
+      looks: (parsed.coordinates || []).map(c => ({ scene:c.scene, title:c.title, comment:c.comment, use:c.use||[], add:c.add||[], img:null })) };
+    (parsed.coordinates || []).forEach((c, i) => drawUserLook(c, i));
   } catch(e){
     showView('setup');
-    showErr(e.message||String(e));
+    showErr(e.message || String(e));
   }
 }
-function showErr(m){ const e=document.getElementById('err'); e.textContent=m; e.classList.add('on'); }
+function showErr(m){ const e = document.getElementById('err'); e.textContent = m; e.classList.add('on'); }
 
-function renderResults(d){
+function renderUserResults(d){
   document.getElementById('res-style-label').textContent = STYLES[styleKey].label + ' の提案';
-  document.getElementById('items').innerHTML = (d.items||[]).map(it=>
+  document.getElementById('uitems').innerHTML = (d.items || []).map(it =>
     `<span class="chip"><b>${esc(it.category)}</b> ${esc(it.name)}・${esc(it.color)}</span>`).join('');
-  document.getElementById('looks').innerHTML = (d.coordinates||[]).map((c,i)=>{
-    const idxs=(c.use_indexes||[]).filter(n=>n>=1&&n<=files.length);
-    const refs = idxs.map(n=>`<div class="ref"><img src="${files[n-1].url}"></div>`).join('');
-    const tags=(c.use||[]).map(u=>`<span class="tag">${esc(u)}</span>`).join('')
-      +(c.add||[]).map(a=>`<span class="tag add">＋${esc(a)}</span>`).join('');
+  document.getElementById('ulooks').innerHTML = (d.coordinates || []).map((c, i) => {
+    const idxs = (c.use_indexes || []).filter(n => n >= 1 && n <= files.length);
+    const refs = idxs.map(n => `<div class="ref"><img src="${files[n-1].url}"></div>`).join('');
+    const tags = (c.use || []).map(u => `<span class="tag">${esc(u)}</span>`).join('')
+      + (c.add || []).map(a => `<span class="tag ou">＋${esc(a)}</span>`).join('');
     return `<div class="look">
       <div class="look-head"><div class="look-scene">${esc(c.scene)}</div><div class="look-title">${esc(c.title)}</div></div>
-      <div class="illus" id="illus-${i}"><div class="mini-loader"></div></div>
+      <div class="illus" id="uillus-${i}"><div class="mini-loader"></div></div>
       <div class="look-body">
-        <p class="look-comment">${esc(c.comment)}</p>
-        ${refs?`<div class="ref-label">手持ちの参照</div><div class="refs">${refs}</div>`:''}
+        <p class="look-note">${esc(c.comment)}</p>
+        ${refs ? `<div class="ref-label">手持ちの参照</div><div class="refs">${refs}</div>` : ''}
         <div class="look-tags">${tags}</div>
       </div></div>`;
   }).join('');
 }
 
-/* ---------- illustration (Gemini) ---------- */
-const GEMINI_MODEL = 'gemini-2.5-flash-image';
-function illusPrompt(c, s){
+function userPrompt(c, s){
   const pieces = [...(c.use||[]), ...(c.add||[])].join('、');
   return `A full-length editorial fashion illustration in the style of hand-drawn ink linework with loose, expressive watercolor washes — a magazine fashion croquis, elegant and refined.
 Depict a single ${gender==='mens'?'male':'female'} figure, full body from head to toe, standing in a natural elegant pose, on a clean off-white paper background.
@@ -514,33 +585,28 @@ The figure wears this ${s.label} outfit: ${pieces}.
 Use the provided clothing photographs as reference for the real colours, patterns, materials and details of each garment — keep them recognisable.
 Palette leaning: ${s.palette}. No text, no captions, no borders, no logos. Single figure only.`;
 }
-async function drawLook(c, i){
-  const box = document.getElementById('illus-'+i);
+async function drawUserLook(c, i){
+  const box = document.getElementById('uillus-' + i);
   if(!box) return;
   const gkey = localStorage.getItem(GKEY_LS);
   if(!gkey){ box.innerHTML = '<div class="fail">Geminiキーが未設定です</div>'; return; }
   const s = STYLES[styleKey];
-  const idxs = (c.use_indexes||[]).filter(n => n>=1 && n<=files.length);
-  const parts = [{ text: illusPrompt(c, s) }];
+  const idxs = (c.use_indexes || []).filter(n => n >= 1 && n <= files.length);
+  const parts = [{ text: userPrompt(c, s) }];
   idxs.forEach(n => parts.push({ inlineData: { mimeType: 'image/jpeg', data: files[n-1].b64 } }));
   try {
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=` + encodeURIComponent(gkey),
       { method:'POST', headers:{ 'content-type':'application/json' }, body: JSON.stringify({ contents:[{ role:'user', parts }] }) });
     const data = await r.json();
     if(!r.ok){ throw new Error((data && data.error && data.error.message) || ('HTTP ' + r.status)); }
-    const cand = data.candidates && data.candidates[0];
-    const cparts = (cand && cand.content && cand.content.parts) || [];
-    const imgPart = cparts.find(p => p.inlineData && p.inlineData.data) || cparts.find(p => p.inline_data && p.inline_data.data);
-    const inl = imgPart && (imgPart.inlineData || imgPart.inline_data);
-    if(!inl){
-      const txt = cparts.map(p => p.text).filter(Boolean).join(' ');
-      throw new Error(txt || '画像が返りませんでした');
-    }
+    const cparts = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [];
+    const ip = cparts.find(p => (p.inlineData && p.inlineData.data) || (p.inline_data && p.inline_data.data));
+    const inl = ip && (ip.inlineData || ip.inline_data);
+    if(!inl){ throw new Error(cparts.map(p => p.text).filter(Boolean).join(' ') || '画像が返りませんでした'); }
     const src = 'data:' + (inl.mimeType || inl.mime_type || 'image/png') + ';base64,' + inl.data;
     const img = new Image();
-    img.onload = ()=>{
-      box.innerHTML=''; box.appendChild(img); img.onclick = ()=> openLb(src);
-      // remember a compact version of this look for the landing page
+    img.onload = () => {
+      box.innerHTML = ''; box.appendChild(img); img.onclick = () => openLb(src);
       try {
         const mx = 760, sc = Math.min(1, mx / Math.max(img.naturalWidth, img.naturalHeight));
         const cv = document.createElement('canvas');
@@ -549,20 +615,20 @@ async function drawLook(c, i){
         if(lastSession && lastSession.looks[i]){ lastSession.looks[i].img = cv.toDataURL('image/jpeg', 0.82); persistLast(); }
       } catch(e){}
     };
-    img.onerror = ()=>{ box.innerHTML='<div class="fail">画像を表示できませんでした</div>'; };
+    img.onerror = () => { box.innerHTML = '<div class="fail">画像を表示できませんでした</div>'; };
     img.src = src;
   } catch(e){
     box.innerHTML = '<div class="fail">イラスト生成に失敗：' + esc(String(e.message||e)).slice(0,140) + '</div>';
   }
 }
 
-function openLb(src){ const lb=document.getElementById('lightbox'); document.getElementById('lb-img').src=src; lb.classList.add('on'); }
+function openLb(src){ const lb = document.getElementById('lightbox'); document.getElementById('lb-img').src = src; lb.classList.add('on'); }
 function closeLb(){ document.getElementById('lightbox').classList.remove('on'); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function resetUpload(){ files = []; renderThumbs(); document.getElementById('note').value = ''; showView('setup'); }
 
-function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
-function reset(){ files=[]; renderThumbs(); document.getElementById('note').value=''; showView('setup'); }
-
-renderStyles(); refreshKeyUI(); renderLanding(); showView('landing');
+/* ---------- init ---------- */
+renderStyles(); refreshKeyUI(); renderLooks(); renderAll(); renderItems(); showView('looks');
 </script>
 </body>
 </html>
