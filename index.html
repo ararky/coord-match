@@ -7,21 +7,16 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
-    --bg: #F5F4F0; --surface: #FFFFFF; --ink: #0E0E12; --sub: #6B6B75;
-    --line: rgba(14,14,18,0.10); --line-soft: rgba(14,14,18,0.06);
-    --a1: #6D5EF6; --a2: #C24BF5; --grad: linear-gradient(115deg, var(--a1), var(--a2));
-    --shadow: 0 1px 2px rgba(14,14,18,0.04), 0 12px 30px -12px rgba(14,14,18,0.16);
+    --bg: #F7F7F5; --surface: #FFFFFF; --ink: #101014; --sub: #70707A;
+    --line: rgba(16,16,20,0.11); --line-soft: rgba(16,16,20,0.07);
+    --blue: #2557E8; --a1: var(--blue); --a2: var(--blue); --grad: var(--blue);
+    --shadow: 0 1px 2px rgba(16,16,20,0.05);
     --mono: ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, monospace;
     --sans: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
   }
   html { overflow-x: hidden; }
   body { min-height: 100%; background: var(--bg); color: var(--ink); font-family: var(--sans); overflow-x: hidden;
     -webkit-font-smoothing: antialiased; line-height: 1.5; }
-  .ambient { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
-  .ambient::before, .ambient::after { content:''; position: absolute; border-radius: 50%; filter: blur(80px); opacity: .22; }
-  .ambient::before { width: 40vw; height: 40vw; top: -10vw; right: -8vw; background: radial-gradient(circle, var(--a2), transparent 70%); }
-  .ambient::after  { width: 36vw; height: 36vw; bottom: -12vw; left: -8vw; background: radial-gradient(circle, var(--a1), transparent 70%); }
-
   .wrap { max-width: 1400px; margin: 0 auto; padding: 1rem 1.2rem 4rem; }
   .stack { max-width: 720px; margin: 0 auto; }
 
@@ -45,25 +40,26 @@
   .look-scene { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text; font-weight: 700; }
   .look-title { font-size: 1.3rem; font-weight: 780; letter-spacing: -0.02em; margin-top: 0.2rem; line-height: 1.2; }
   .look-no { font-family: var(--mono); font-size: 0.62rem; color: var(--sub); margin-left: 0.3rem; }
-  .illus { border-radius: 14px; overflow: hidden; background: radial-gradient(120% 90% at 50% 0%, #fbfaff 0%, #f0eef6 100%); aspect-ratio: 4/5; display: flex; align-items: center; justify-content: center; position: relative; }
+  .illus { border-radius: 14px; overflow: hidden; background: #fff; border: 1px solid var(--line-soft); aspect-ratio: 3/4; display: flex; align-items: center; justify-content: center; position: relative; }
   .illus img { width: 100%; height: 100%; display: block; object-fit: cover; cursor: zoom-in; }
   .illus .mini-loader { width: 30px; height: 30px; border-radius: 50%; background: conic-gradient(var(--a1), var(--a2), transparent 75%);
     -webkit-mask: radial-gradient(farthest-side, transparent 58%, #000 60%); mask: radial-gradient(farthest-side, transparent 58%, #000 60%); animation: sp 0.9s linear infinite; }
   @keyframes sp { to { transform: rotate(360deg); } }
   .illus .fail { font-size: 0.76rem; color: var(--sub); padding: 1rem; text-align: center; line-height: 1.6; }
-  .illus .genb { font-family: var(--sans); font-size: 0.82rem; font-weight: 700; padding: 0.6rem 1rem; border-radius: 11px; border: none; cursor: pointer; background: var(--grad); color: #fff; box-shadow: 0 6px 16px -6px rgba(109,94,246,0.6); }
+  .illus .genb { font-family: var(--sans); font-size: 0.82rem; font-weight: 700; padding: 0.6rem 1rem; border-radius: 11px; border: none; cursor: pointer; background: var(--grad); color: #fff; box-shadow: 0 6px 16px -6px rgba(37,87,232,0.4); }
   .illus .gen-hint { position: absolute; bottom: 0.7rem; left: 0; right: 0; text-align: center; font-size: 0.66rem; color: var(--sub); }
   .illus .dl { position: absolute; right: 8px; bottom: 8px; font-family: var(--mono); font-size: 0.6rem; background: rgba(14,14,18,0.6); color: #fff; padding: 0.2rem 0.5rem; border-radius: 7px; text-decoration: none; }
+  .illus .rg { position: absolute; right: 62px; bottom: 8px; font-family: var(--mono); font-size: 0.6rem; background: rgba(14,14,18,0.6); color: #fff; padding: 0.2rem 0.5rem; border-radius: 7px; border: none; cursor: pointer; }
   .look-body { padding: 0.85rem 0.15rem 0; }
   .look-note { font-size: 0.88rem; line-height: 1.75; color: var(--ink); }
   .look-tags { display: flex; flex-wrap: wrap; gap: 0.32rem; margin-top: 0.7rem; }
   .tag { font-size: 0.7rem; padding: 0.24rem 0.55rem; border-radius: 8px; background: #eceaf2; color: #4a4a55; }
-  .tag.ou { background: rgba(109,94,246,0.12); color: var(--a1); font-weight: 600; }
+  .tag.ou { background: rgba(37,87,232,0.10); color: var(--a1); font-weight: 600; }
 
   /* all view */
   .search-bar { display: flex; align-items: center; gap: 0.7rem; margin: 0.2rem 0 1.1rem; flex-wrap: wrap; }
   .search-bar input { flex: 1; min-width: 220px; max-width: 480px; font-family: var(--sans); font-size: 0.92rem; padding: 0.7rem 0.9rem; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
-  .search-bar input:focus { outline: none; border-color: var(--a1); box-shadow: 0 0 0 3px rgba(109,94,246,0.15); }
+  .search-bar input:focus { outline: none; border-color: var(--a1); box-shadow: 0 0 0 3px rgba(37,87,232,0.16); }
   .count { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.1em; color: var(--sub); }
 
   /* items view */
@@ -79,18 +75,18 @@
   .step .n { width: 1.5rem; height: 1.5rem; border-radius: 8px; background: var(--ink); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 0.72rem; }
   .step .n.grad { background: var(--grad); }
   input[type=password], input[type=text] { width: 100%; font-family: var(--sans); font-size: 0.92rem; padding: 0.8rem 0.9rem; border: 1px solid var(--line); border-radius: 13px; background: #fff; color: var(--ink); }
-  input:focus { outline: none; border-color: var(--a1); box-shadow: 0 0 0 3px rgba(109,94,246,0.15); }
+  input:focus { outline: none; border-color: var(--a1); box-shadow: 0 0 0 3px rgba(37,87,232,0.16); }
   .key-row { display: flex; gap: 0.55rem; } .key-row input { flex: 1; }
   .keylabel { font-size: 0.78rem; font-weight: 650; margin-bottom: 0.4rem; }
   .kstat { font-size: 0.72rem; font-weight: 600; color: #22C55E; }
   .kstat .ml { color: var(--sub); text-decoration: underline; cursor: pointer; margin-left: 0.4rem; font-weight: 500; }
   .keyfield + .keyfield { margin-top: 0.9rem; padding-top: 0.9rem; border-top: 1px solid var(--line-soft); }
   .hint { font-size: 0.74rem; color: var(--sub); margin-top: 0.7rem; line-height: 1.6; } .hint b { color: var(--ink); }
-  .link { color: var(--a1); text-decoration: none; border-bottom: 1px solid rgba(109,94,246,0.35); cursor: pointer; }
+  .link { color: var(--a1); text-decoration: none; border-bottom: 1px solid rgba(37,87,232,0.35); cursor: pointer; }
   .btn { font-family: var(--sans); font-size: 0.98rem; font-weight: 700; padding: 0.9rem 1.2rem; border-radius: 14px; border: none; cursor: pointer; transition: transform 0.12s; }
   .btn:active { transform: scale(0.98); }
   .btn.solid { background: var(--ink); color: #fff; }
-  .btn.grad { background: var(--grad); color: #fff; width: 100%; margin-top: 1rem; box-shadow: 0 8px 22px -8px rgba(109,94,246,0.7); }
+  .btn.grad { background: var(--grad); color: #fff; width: 100%; margin-top: 1rem; box-shadow: 0 8px 22px -8px rgba(37,87,232,0.45); }
   .btn.grad:disabled { opacity: 0.35; box-shadow: none; cursor: default; }
   .btn.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); display: block; margin: 1.6rem auto 0; }
   .btn.sm { padding: 0.7rem 1rem; font-size: 0.85rem; }
@@ -142,7 +138,6 @@
 </style>
 </head>
 <body>
-<div class="ambient"></div>
 <div class="wrap">
 
   <header class="topbar">
@@ -152,6 +147,10 @@
       <button data-v="all" onclick="showView('all')">コーデ100</button>
       <button data-v="items" onclick="showView('items')">アイテム100</button>
     </nav>
+    <div class="seg" id="ggender">
+      <button class="seg-btn on" data-g="mens" onclick="pickGender('mens')">メンズ</button>
+      <button class="seg-btn" data-g="womens" onclick="pickGender('womens')">ウィメンズ</button>
+    </div>
     <button class="btn solid sm cta" id="topcta" onclick="showView('setup')">自分の服で試す →</button>
   </header>
 
@@ -203,12 +202,8 @@
         <p class="hint">両方とも <b>ブラウザ内だけ</b>に保存され、各社へ直接送信されます（サーバー非経由）。Claudeは <span class="link" onclick="window.open('https://console.anthropic.com/settings/keys','_blank')">console.anthropic.com</span>、Geminiは <span class="link" onclick="window.open('https://aistudio.google.com/apikey','_blank')">aistudio.google.com/apikey</span> で発行（画像生成は従量課金の有効化が必要）。</p>
       </div>
       <div class="card" id="sec-up">
-        <div class="step"><span class="n">2</span> 性別とテイスト</div>
-        <div class="seg" id="gender">
-          <button class="seg-btn on" data-g="mens" onclick="pickGender('mens')">メンズ</button>
-          <button class="seg-btn" data-g="womens" onclick="pickGender('womens')">ウィメンズ</button>
-        </div>
-        <div class="styles" id="styles" style="margin-top:0.7rem"></div>
+        <div class="step"><span class="n">2</span> テイストを選ぶ（性別は上部で切替）</div>
+        <div class="styles" id="styles"></div>
         <div class="step" style="margin-top:1.3rem"><span class="n">3</span> 手持ちの服をアップ</div>
         <div class="drop" id="drop" onclick="document.getElementById('file').click()">
           <div class="ic">📷</div>
@@ -301,21 +296,33 @@ function lookCardHTML(c, note){
 function setIllusImg(box, src, withDl, n){
   box.innerHTML = '';
   const img = new Image();
-  img.onload = () => { box.appendChild(img); if(withDl){ const a = document.createElement('a'); a.className='dl'; a.textContent='⬇ 保存'; a.href = src; a.download = `${n}.jpg`; box.appendChild(a); } };
+  img.onload = () => {
+    box.appendChild(img);
+    if(withDl){
+      const rg = document.createElement('button'); rg.className = 'rg'; rg.textContent = '↻ 再生成';
+      rg.onclick = () => { try { localStorage.removeItem(imgKey(n)); } catch(e){} genLookIllus(n); };
+      box.appendChild(rg);
+      const a = document.createElement('a'); a.className = 'dl'; a.textContent = '⬇ 保存'; a.href = src;
+      a.download = (gender === 'womens' ? 'w' : '') + n + '.jpg';
+      box.appendChild(a);
+    }
+  };
   img.onclick = () => openLb(src);
   img.src = src;
 }
+function imgKey(n){ return gender === 'womens' ? 'mmf_cimg_w' + n : 'mmf_cimg_' + n; }
+function bundledPath(n){ return gender === 'womens' ? 'looks/w' + n + '.jpg' : 'looks/' + n + '.jpg'; }
 function initLookImg(n){
   const box = document.getElementById('cillus-' + n);
   if(!box) return;
-  const cached = lsGet('mmf_cimg_' + n);
+  const cached = lsGet(imgKey(n));
   if(cached){ setIllusImg(box, cached, true, n); return; }
   const probe = new Image();
-  probe.onload = () => setIllusImg(box, 'looks/' + n + '.jpg', false, n);
+  probe.onload = () => setIllusImg(box, bundledPath(n), false, n);
   probe.onerror = () => {
     box.innerHTML = `<button class="genb" onclick="genLookIllus(${n})">イラストを生成</button><div class="gen-hint">Geminiキーで1回だけ生成（約$0.04）・端末に保存されます</div>`;
   };
-  probe.src = 'looks/' + n + '.jpg';
+  probe.src = bundledPath(n);
 }
 function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
 function lsSet(k, v){ try { localStorage.setItem(k, v); return true; } catch(e){ return false; } }
@@ -323,10 +330,20 @@ function lsSet(k, v){ try { localStorage.setItem(k, v); return true; } catch(e){
 const GEMINI_MODEL = 'gemini-2.5-flash-image';
 function catalogPrompt(c){
   const names = comboPieces(c).map(iname);
-  return `A full-length editorial fashion illustration in the style of hand-drawn ink linework with loose, expressive watercolor washes — a magazine fashion croquis, elegant and refined.
-Single male figure, full body from head to toe, natural relaxed standing pose, clean off-white paper background.
-He wears this outfit (Japanese city-boy / American traditional / military mix): ${names.join('、')}.
-Style mood: ${c.s} — ${c.t}. Muted palette true to the garments' real colours. No text, no captions, no borders, no logos. Single figure only.`;
+  const fig = gender === 'womens' ? 'female' : 'male';
+  const wear = gender === 'womens'
+    ? 'She wears this unisex wardrobe styled on a woman'
+    : 'He wears this outfit (Japanese city-boy / American traditional / military mix)';
+  return `A minimal flat-color comic-style spot illustration for a modern Japanese culture magazine. Quiet but memorable, slightly quirky, never cute or ad-like.
+SUBJECT: one single ${fig} character, drawn exactly once. A solo full-body character illustration — the lone figure stands in the centre of the frame with generous empty white margin on every side, and the whole body from head to shoes sits fully inside the frame, nothing touching or cropped by the edges.
+POSE: facing the viewer in a relaxed three-quarter stance, standing calmly. One hand may hold a single small everyday object (such as a coffee cup).
+Do not draw a second person. Do not repeat or duplicate the figure. Do not make a collage, grid, or lookbook spread — one figure on one plain white page.
+LINE: all outlines in uniform EXTRA-THICK black lines, clean hand-drawn but not rough. No thin, delicate or faint lines anywhere.
+FIGURE: simplified into basic shapes, slightly awkward endearing proportions. Minimal face — dot eyes, simple nose, small mouth.
+OUTFIT — ${wear}, drawn slightly OVERSIZED with a boxy, relaxed, drapey modern Japanese city-boy silhouette: ${names.join('、')}.
+COLOR: flat solid fills only, limited to 2–4 key colours taken from the outfit. Plain white background. No shading, no gradients, no realistic textures, no photographic rendering.
+MOOD: ${c.s} — ${c.t}.
+No text, no logos, no UI, no captions, no borders.`;
 }
 async function genLookIllus(n){
   const box = document.getElementById('cillus-' + n);
@@ -341,7 +358,8 @@ async function genLookIllus(n){
   try {
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=` + encodeURIComponent(gkey),
       { method:'POST', headers:{ 'content-type':'application/json' },
-        body: JSON.stringify({ contents:[{ role:'user', parts:[{ text: catalogPrompt(c) }] }] }) });
+        body: JSON.stringify({ contents:[{ role:'user', parts:[{ text: catalogPrompt(c) }] }],
+          generationConfig: { imageConfig: { aspectRatio: '3:4' } } }) });
     const data = await r.json();
     if(!r.ok) throw new Error((data && data.error && data.error.message) || ('HTTP ' + r.status));
     const cparts = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [];
@@ -359,7 +377,7 @@ async function genLookIllus(n){
         cv.width = Math.round(img.naturalWidth * sc); cv.height = Math.round(img.naturalHeight * sc);
         cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
         src = cv.toDataURL('image/jpeg', 0.85);
-        lsSet('mmf_cimg_' + n, src);
+        lsSet(imgKey(n), src);
       } catch(e){}
       setIllusImg(box, src, true, n);
     };
@@ -445,7 +463,7 @@ function clearKey(which){ localStorage.removeItem(KEYMAP[which].ls); refreshKeyU
 /* ---------- 写真アップ（プレミアム） ---------- */
 let files = [];
 let styleKey = 'ivy';
-let gender = 'mens';
+let gender = (localStorage.getItem('mmf_gender') === 'womens') ? 'womens' : 'mens';
 function genderJP(){ return gender === 'mens' ? 'メンズ' : 'ウィメンズ'; }
 const LAST_LS = 'coordmatch_last';
 let lastSession = null;
@@ -478,7 +496,9 @@ function renderStyles(){
 }
 function pickStyle(k){ styleKey = k; renderStyles(); }
 function pickGender(g){ gender = g;
-  document.querySelectorAll('#gender .seg-btn').forEach(b => b.classList.toggle('on', b.dataset.g === g)); }
+  try { localStorage.setItem('mmf_gender', g); } catch(e){}
+  document.querySelectorAll('#ggender .seg-btn').forEach(b => b.classList.toggle('on', b.dataset.g === g));
+  renderLooks(); renderAll(); }
 
 const drop = document.getElementById('drop');
 document.getElementById('file').addEventListener('change', e => handleFiles(e.target.files));
@@ -579,11 +599,15 @@ function renderUserResults(d){
 
 function userPrompt(c, s){
   const pieces = [...(c.use||[]), ...(c.add||[])].join('、');
-  return `A full-length editorial fashion illustration in the style of hand-drawn ink linework with loose, expressive watercolor washes — a magazine fashion croquis, elegant and refined.
-Depict a single ${gender==='mens'?'male':'female'} figure, full body from head to toe, standing in a natural elegant pose, on a clean off-white paper background.
-The figure wears this ${s.label} outfit: ${pieces}.
-Use the provided clothing photographs as reference for the real colours, patterns, materials and details of each garment — keep them recognisable.
-Palette leaning: ${s.palette}. No text, no captions, no borders, no logos. Single figure only.`;
+  return `A minimal flat-color comic-style editorial illustration — like a modern Japanese culture-magazine spot illustration or a striking SNS eyecatch. Quiet but memorable, slightly quirky, never cute or ad-like.
+Composition: vertical 3:4, EXACTLY ONE ${gender==='mens'?'male':'female'} figure, full body, centered, seen from a slight 45-degree front angle, standing calmly. Large generous white margins around the figure. Plain white background — no scenery.
+Never draw a second person, a partial figure, a back view, an alternate angle, or a side-by-side variation.
+Line style: ALL outlines in uniform EXTRA-THICK black lines, clean hand-drawn but not rough. No thin, delicate or faint lines anywhere.
+Figure style: simplified into basic shapes, slightly awkward endearing proportions. Minimal face — dot eyes, simple nose, small mouth.
+The figure wears this ${s.label} outfit, drawn slightly OVERSIZED — boxy, relaxed, drapey modern silhouette: ${pieces}.
+Use the provided clothing photographs as reference for the garments' key colours and patterns, but simplify them into flat solid fills — keep each garment recognisable by shape and colour.
+Colors: flat solid fills only, limited to 2–4 key colours (palette leaning: ${s.palette}). No shading, no gradients, no realistic textures, no photographic rendering.
+No text, no logos, no UI, no captions, no borders.`;
 }
 async function drawUserLook(c, i){
   const box = document.getElementById('uillus-' + i);
@@ -596,7 +620,9 @@ async function drawUserLook(c, i){
   idxs.forEach(n => parts.push({ inlineData: { mimeType: 'image/jpeg', data: files[n-1].b64 } }));
   try {
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=` + encodeURIComponent(gkey),
-      { method:'POST', headers:{ 'content-type':'application/json' }, body: JSON.stringify({ contents:[{ role:'user', parts }] }) });
+      { method:'POST', headers:{ 'content-type':'application/json' },
+        body: JSON.stringify({ contents:[{ role:'user', parts }],
+          generationConfig: { imageConfig: { aspectRatio: '3:4' } } }) });
     const data = await r.json();
     if(!r.ok){ throw new Error((data && data.error && data.error.message) || ('HTTP ' + r.status)); }
     const cparts = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [];
@@ -628,7 +654,7 @@ function esc(s){ return String(s == null ? '' : s).replace(/[&<>]/g, c => ({'&':
 function resetUpload(){ files = []; renderThumbs(); document.getElementById('note').value = ''; showView('setup'); }
 
 /* ---------- init ---------- */
-renderStyles(); refreshKeyUI(); renderLooks(); renderAll(); renderItems(); showView('looks');
+renderStyles(); refreshKeyUI(); renderItems(); pickGender(gender); showView('looks');
 </script>
 </body>
 </html>
