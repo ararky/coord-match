@@ -28,6 +28,15 @@
   .nav button.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(14,14,18,0.1); }
   .topbar .cta { margin-left: auto; }
 
+  .sec-head { display: flex; align-items: baseline; gap: 0.7rem; margin: 0.3rem 0 0.9rem; flex-wrap: wrap; }
+  .sec-title { font-size: 1.08rem; font-weight: 800; letter-spacing: -0.01em; }
+  .sec-sub { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sub); }
+
+  .look-head { display: flex; align-items: flex-start; gap: 0.6rem; }
+  .look-head .lh-main { flex: 1; min-width: 0; }
+  .savb { flex-shrink: 0; font-family: var(--sans); font-size: 0.72rem; font-weight: 650; padding: 0.32rem 0.6rem; border-radius: 9px; border: 1px solid var(--line); background: #fff; color: var(--sub); cursor: pointer; margin-top: 0.15rem; }
+  .savb.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+
   .season-bar { display: flex; align-items: center; gap: 0.5rem; margin: 0.2rem 0 1rem; flex-wrap: wrap; }
   .season-bar .stab { font-family: var(--sans); font-size: 0.92rem; font-weight: 700; padding: 0.5rem 1.15rem; border-radius: 11px; border: 1px solid var(--line); background: #fff; color: var(--sub); cursor: pointer; }
   .season-bar .stab.on { background: var(--ink); color: #fff; border-color: transparent; }
@@ -146,6 +155,7 @@
       <button data-v="looks" class="on" onclick="showView('looks')">季節のコーデ</button>
       <button data-v="all" onclick="showView('all')">コーデ100</button>
       <button data-v="items" onclick="showView('items')">アイテム100</button>
+      <button data-v="board" onclick="showView('board')">ボード</button>
     </nav>
     <div class="seg" id="ggender">
       <button class="seg-btn on" data-g="mens" onclick="pickGender('mens')">メンズ</button>
@@ -156,6 +166,10 @@
 
   <!-- 季節のコーデ -->
   <div id="looks-view">
+    <div class="sec-head"><span class="sec-title">今日の3コーデ</span><span class="sec-sub" id="daily-date"></span></div>
+    <div id="daily-cards" class="gallery wide3"></div>
+
+    <div class="sec-head section-gap"><span class="sec-title">季節の定番</span><span class="sec-sub">Editors' Picks · 解説つき</span></div>
     <div class="season-bar" id="season-bar"></div>
     <div id="season-cards" class="gallery wide3"></div>
     <div id="mine-section" class="section-gap" style="display:none">
@@ -177,6 +191,13 @@
   <div id="items-view" style="display:none">
     <div class="count" id="items-count"></div>
     <div id="items-list"></div>
+  </div>
+
+  <!-- マイボード -->
+  <div id="board-view" style="display:none">
+    <div class="sec-head"><span class="sec-title">マイボード</span><span class="sec-sub" id="board-count"></span></div>
+    <p class="hint" id="board-empty" style="display:none">気に入ったコーデの「☆ 保存」を押すと、ここに集まります。この端末のブラウザに保存され、いつでも見返せます。</p>
+    <div id="board-cards" class="gallery"></div>
   </div>
 
   <!-- 自分の服で試す（プレミアム） -->
@@ -257,16 +278,18 @@ function comboPieces(c){
 const CMAP = {}; COMBOS.forEach(c => CMAP[c.n] = c);
 
 /* ---------- views ---------- */
-const VIEWS = ['looks','all','items','setup','loading','results'];
+const VIEWS = ['looks','all','items','board','setup','loading','results'];
+const VIEW_EL = { looks:'looks-view', all:'all-view', items:'items-view', board:'board-view' };
 function showView(v){
   VIEWS.forEach(k => {
-    const el = document.getElementById(k === 'looks' ? 'looks-view' : k === 'all' ? 'all-view' : k === 'items' ? 'items-view' : k);
+    const el = document.getElementById(VIEW_EL[k] || k);
     if(!el) return;
     if(k === 'loading'){ el.classList.toggle('on', v === 'loading'); }
     else el.style.display = (k === v) ? 'block' : 'none';
   });
   document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
-  document.getElementById('topcta').style.display = (v==='looks'||v==='all'||v==='items') ? '' : 'none';
+  document.getElementById('topcta').style.display = (v==='looks'||v==='all'||v==='items'||v==='board') ? '' : 'none';
+  if(v === 'board') renderBoard();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -279,10 +302,14 @@ function tagsHTML(c){
   return t.join('');
 }
 function lookCardHTML(c, note, pfx){
+  const saved = isSaved(c.n);
   return `<div class="look">
     <div class="look-head">
-      <div class="look-scene">${esc(c.s)}</div>
-      <div class="look-title">${esc(c.t)}<span class="look-no">#${c.n}</span></div>
+      <div class="lh-main">
+        <div class="look-scene">${esc(c.s)}</div>
+        <div class="look-title">${esc(c.t)}<span class="look-no">#${c.n}</span></div>
+      </div>
+      <button class="savb ${saved?'on':''}" data-n="${c.n}" onclick="toggleBoard(${c.n})">${saved?'★ 保存済み':'☆ 保存'}</button>
     </div>
     <div class="illus" id="cillus-${pfx}-${c.n}"><div class="mini-loader"></div></div>
     <div class="look-body">
@@ -290,6 +317,27 @@ function lookCardHTML(c, note, pfx){
       <div class="look-tags">${tagsHTML(c)}</div>
     </div>
   </div>`;
+}
+
+/* ---------- マイボード（保存） ---------- */
+function getBoard(){ try { return JSON.parse(localStorage.getItem('mmf_board') || '[]'); } catch(e){ return []; } }
+function isSaved(n){ return getBoard().includes(n); }
+function toggleBoard(n){
+  let a = getBoard();
+  if(a.includes(n)) a = a.filter(x => x !== n); else a.push(n);
+  lsSet('mmf_board', JSON.stringify(a));
+  const on = a.includes(n);
+  document.querySelectorAll(`.savb[data-n="${n}"]`).forEach(b => {
+    b.classList.toggle('on', on); b.textContent = on ? '★ 保存済み' : '☆ 保存';
+  });
+  if(document.getElementById('board-view').style.display !== 'none') renderBoard();
+}
+function renderBoard(){
+  const a = getBoard();
+  document.getElementById('board-count').textContent = a.length ? a.length + ' コーデ保存中' : '';
+  document.getElementById('board-empty').style.display = a.length ? 'none' : 'block';
+  document.getElementById('board-cards').innerHTML = a.map(n => CMAP[n] ? lookCardHTML(CMAP[n], null, 'b') : '').join('');
+  a.forEach(n => { if(CMAP[n]) initLookImg(n, 'b'); });
 }
 
 /* illustration resolution: cache → bundled looks/{n}.jpg → generate button */
@@ -332,7 +380,7 @@ function initLookImg(n, pfx){
   probe.src = bundledPath(n);
 }
 /* after a successful generation, refresh this look's box in every view */
-function refreshLookBoxes(n){ ['s','a'].forEach(p => initLookImg(n, p)); }
+function refreshLookBoxes(n){ ['d','s','a','b'].forEach(p => initLookImg(n, p)); }
 
 /* ---- single-figure safety net ----
    The image model occasionally draws the outfit twice (two variants side by side)
@@ -451,9 +499,11 @@ async function genLookIllus(n, pfx){
         lsSet(imgKey(n), src);
       } catch(e){}
       setIllusImg(box, src, true, n, pfx);
-      const other = pfx === 's' ? 'a' : 's';
-      const ob = document.getElementById('cillus-' + other + '-' + n);
-      if(ob) setIllusImg(ob, src, true, n, other);
+      ['d','s','a','b'].forEach(p => {
+        if(p === pfx) return;
+        const ob = document.getElementById('cillus-' + p + '-' + n);
+        if(ob) setIllusImg(ob, src, true, n, p);
+      });
     };
     img.onerror = () => { box.innerHTML = '<div class="fail">画像を表示できませんでした</div>'; };
     img.src = raw;
@@ -463,8 +513,36 @@ async function genLookIllus(n, pfx){
 }
 
 /* ---------- 季節のコーデ ---------- */
-let curSeason = (function(){ const m = new Date().getMonth() + 1;
-  return m >= 3 && m <= 5 ? 'spring' : m >= 6 && m <= 8 ? 'summer' : m >= 9 && m <= 11 ? 'autumn' : 'winter'; })();
+function seasonOfNow(){ const m = new Date().getMonth() + 1;
+  return m >= 3 && m <= 5 ? 'spring' : m >= 6 && m <= 8 ? 'summer' : m >= 9 && m <= 11 ? 'autumn' : 'winter'; }
+let curSeason = seasonOfNow();
+
+/* ---- 今日の3コーデ：日付シード（今日は全員同じ・明日入れ替わる） ---- */
+const SKEY = { spring:'sp', summer:'su', autumn:'au', winter:'wi' };
+function hash32(str){ let h = 2166136261 >>> 0;
+  for(let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0; }
+function mulberry32(a){ return function(){ a |= 0; a = (a + 0x6D2B79F5) | 0;
+  let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function todayStr(){ const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function dailyPicks(){
+  const sk = SKEY[seasonOfNow()];
+  const pool = COMBOS.filter(c => (c.se || []).includes(sk));
+  const rnd = mulberry32(hash32(todayStr()));
+  const arr = pool.slice();
+  for(let i = arr.length - 1; i > 0; i--){ const j = Math.floor(rnd() * (i + 1)); const t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
+  return arr.slice(0, 3);
+}
+function renderDaily(){
+  const d = new Date();
+  document.getElementById('daily-date').textContent =
+    (d.getMonth()+1) + '月' + d.getDate() + '日 · 毎日入れ替わり · 今日は全員この3本';
+  const picks = dailyPicks();
+  document.getElementById('daily-cards').innerHTML = picks.map(c => lookCardHTML(c, null, 'd')).join('');
+  picks.forEach(c => initLookImg(c.n, 'd'));
+}
 function renderSeasonBar(){
   const bar = document.getElementById('season-bar');
   bar.innerHTML = Object.entries(SEASONAL).map(([k, se]) =>
@@ -473,6 +551,7 @@ function renderSeasonBar(){
 }
 function pickSeason(k){ curSeason = k; renderLooks(); }
 function renderLooks(){
+  renderDaily();
   renderSeasonBar();
   const picks = SEASONAL[curSeason].picks;
   document.getElementById('season-cards').innerHTML = picks.map(p => lookCardHTML(CMAP[p.n], p.note, 's')).join('');
