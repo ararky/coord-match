@@ -333,6 +333,70 @@ function initLookImg(n, pfx){
 }
 /* after a successful generation, refresh this look's box in every view */
 function refreshLookBoxes(n){ ['s','a'].forEach(p => initLookImg(n, p)); }
+
+/* ---- single-figure safety net ----
+   The image model occasionally draws the outfit twice (two variants side by side)
+   despite the prompt. On a white background the duplicates are separated by an
+   empty vertical gap, so: scan column occupancy, find person-sized clusters,
+   and if there are 2+, crop to the dominant one and re-center on a 3:4 canvas. */
+function dominantFigureRegion(ctx, w, h){
+  const d = ctx.getImageData(0, 0, w, h).data;
+  const occ = new Array(w).fill(0);
+  const rows = Math.ceil(h / 2);
+  for(let x = 0; x < w; x++){
+    let c = 0;
+    for(let y = 0; y < h; y += 2){
+      const i = (y * w + x) * 4;
+      if(!(d[i] > 235 && d[i+1] > 235 && d[i+2] > 235)) c++;
+    }
+    occ[x] = c;
+  }
+  const th = rows * 0.03;
+  const runs = []; let s = -1;
+  for(let x = 0; x < w; x++){
+    const on = occ[x] > th;
+    if(on && s < 0) s = x;
+    if(!on && s >= 0){ runs.push([s, x]); s = -1; }
+  }
+  if(s >= 0) runs.push([s, w]);
+  const merged = [];
+  for(const r of runs){
+    const last = merged[merged.length - 1];
+    if(last && r[0] - last[1] < w * 0.02){ last[1] = r[1]; } else merged.push([r[0], r[1]]);
+  }
+  const big = merged.filter(r => (r[1] - r[0]) >= w * 0.16);
+  if(big.length < 2) return null; // 0-1 person-sized clusters → leave untouched
+  let best = null, bestMass = -1;
+  for(const r of big){
+    let m = 0; for(let x = r[0]; x < r[1]; x++) m += occ[x];
+    if(m > bestMass){ bestMass = m; best = r; }
+  }
+  const pad = Math.round(w * 0.05);
+  return { x0: Math.max(0, best[0] - pad), x1: Math.min(w, best[1] + pad) };
+}
+function postProcessLook(img){
+  const mx = 720, sc = Math.min(1, mx / Math.max(img.naturalWidth, img.naturalHeight));
+  const w = Math.round(img.naturalWidth * sc), h = Math.round(img.naturalHeight * sc);
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const ctx = cv.getContext('2d');
+  ctx.drawImage(img, 0, 0, w, h);
+  const region = dominantFigureRegion(ctx, w, h);
+  if(region){
+    const cw = region.x1 - region.x0;
+    const tw = Math.round(h * 0.75); // 3:4 canvas
+    const out = document.createElement('canvas'); out.width = tw; out.height = h;
+    const octx = out.getContext('2d');
+    octx.fillStyle = '#ffffff'; octx.fillRect(0, 0, tw, h);
+    if(cw <= tw){
+      octx.drawImage(cv, region.x0, 0, cw, h, Math.round((tw - cw) / 2), 0, cw, h);
+    } else {
+      const s2 = tw / cw, nh = Math.round(h * s2);
+      octx.drawImage(cv, region.x0, 0, cw, h, 0, Math.round((h - nh) / 2), tw, nh);
+    }
+    return out.toDataURL('image/jpeg', 0.85);
+  }
+  return cv.toDataURL('image/jpeg', 0.85);
+}
 function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
 function lsSet(k, v){ try { localStorage.setItem(k, v); return true; } catch(e){ return false; } }
 
@@ -345,7 +409,7 @@ function catalogPrompt(c){
     : 'He wears this outfit (Japanese city-boy / American traditional / military mix)';
   return `A minimal flat-color comic-style spot illustration for a modern Japanese culture magazine. Quiet but memorable, slightly quirky, never cute or ad-like.
 SUBJECT: one single ${fig} character, drawn exactly once. A solo full-body character illustration — the lone figure stands in the centre of the frame with generous empty white margin on every side, and the whole body from head to shoes sits fully inside the frame, nothing touching or cropped by the edges.
-POSE: facing the viewer in a relaxed three-quarter stance, standing calmly. One hand may hold a single small everyday object (such as a coffee cup).
+POSE: facing the viewer in a relaxed three-quarter stance, standing calmly, hands relaxed or one hand in a pocket. The picture contains exactly one person in total.
 Do not draw a second person. Do not repeat or duplicate the figure. Do not make a collage, grid, or lookbook spread — one figure on one plain white page.
 LINE: all outlines in uniform EXTRA-THICK black lines, clean hand-drawn but not rough. No thin, delicate or faint lines anywhere.
 FIGURE: simplified into basic shapes, slightly awkward endearing proportions. Minimal face — dot eyes, simple nose, small mouth.
@@ -383,11 +447,7 @@ async function genLookIllus(n, pfx){
     img.onload = () => {
       let src = raw;
       try {
-        const mx = 720, sc = Math.min(1, mx / Math.max(img.naturalWidth, img.naturalHeight));
-        const cv = document.createElement('canvas');
-        cv.width = Math.round(img.naturalWidth * sc); cv.height = Math.round(img.naturalHeight * sc);
-        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
-        src = cv.toDataURL('image/jpeg', 0.85);
+        src = postProcessLook(img); // downscale + auto-crop to a single figure if the model drew two
         lsSet(imgKey(n), src);
       } catch(e){}
       setIllusImg(box, src, true, n, pfx);
@@ -615,7 +675,7 @@ function userPrompt(c, s){
   const pieces = [...(c.use||[]), ...(c.add||[])].join('、');
   return `A minimal flat-color comic-style spot illustration for a modern Japanese culture magazine. Quiet but memorable, slightly quirky, never cute or ad-like.
 SUBJECT: one single ${gender==='mens'?'male':'female'} character, drawn exactly once. A solo full-body character illustration — the lone figure stands in the centre of the frame with generous empty white margin on every side, and the whole body from head to shoes sits fully inside the frame, nothing touching or cropped by the edges.
-POSE: facing the viewer in a relaxed three-quarter stance, standing calmly.
+POSE: facing the viewer in a relaxed three-quarter stance, standing calmly, hands relaxed or one hand in a pocket. The picture contains exactly one person in total.
 Do not draw a second person. Do not repeat or duplicate the figure. Do not make a collage, grid, or lookbook spread — one figure on one plain white page.
 LINE: all outlines in uniform EXTRA-THICK black lines, clean hand-drawn but not rough. No thin, delicate or faint lines anywhere.
 FIGURE: simplified into basic shapes, slightly awkward endearing proportions. Minimal face — dot eyes, simple nose, small mouth.
@@ -647,13 +707,13 @@ async function drawUserLook(c, i){
     const src = 'data:' + (inl.mimeType || inl.mime_type || 'image/png') + ';base64,' + inl.data;
     const img = new Image();
     img.onload = () => {
-      box.innerHTML = ''; box.appendChild(img); img.onclick = () => openLb(src);
+      let fin = src;
+      try { fin = postProcessLook(img); } catch(e){}
+      const shown = new Image();
+      shown.onload = () => { box.innerHTML = ''; box.appendChild(shown); shown.onclick = () => openLb(fin); };
+      shown.src = fin;
       try {
-        const mx = 760, sc = Math.min(1, mx / Math.max(img.naturalWidth, img.naturalHeight));
-        const cv = document.createElement('canvas');
-        cv.width = Math.round(img.naturalWidth * sc); cv.height = Math.round(img.naturalHeight * sc);
-        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
-        if(lastSession && lastSession.looks[i]){ lastSession.looks[i].img = cv.toDataURL('image/jpeg', 0.82); persistLast(); }
+        if(lastSession && lastSession.looks[i]){ lastSession.looks[i].img = fin; persistLast(); }
       } catch(e){}
     };
     img.onerror = () => { box.innerHTML = '<div class="fail">画像を表示できませんでした</div>'; };
