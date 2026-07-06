@@ -176,15 +176,8 @@
   <!-- 季節のコーデ -->
   <div id="looks-view">
     <div class="sec-head"><span class="sec-title">今日の3コーデ</span><span class="sec-sub" id="daily-date"></span></div>
-    <div id="daily-cards" class="gallery wide3"></div>
-
-    <div class="sec-head section-gap"><span class="sec-title">季節の定番</span><span class="sec-sub">Editors' Picks · 解説つき</span></div>
     <div class="season-bar" id="season-bar"></div>
-    <div id="season-cards" class="gallery wide3"></div>
-    <div id="mine-section" class="section-gap" style="display:none">
-      <div class="cat-title">あなたの前回のコーデ（写真アップから）</div>
-      <div id="mine-cards" class="gallery wide3"></div>
-    </div>
+    <div id="daily-cards" class="gallery wide3"></div>
   </div>
 
   <!-- コーデ100 -->
@@ -731,49 +724,34 @@ function mulberry32(a){ return function(){ a |= 0; a = (a + 0x6D2B79F5) | 0;
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 function todayStr(){ const d = new Date();
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
-function dailyPicks(){
-  const sk = SKEY[seasonOfNow()];
+const NOTE = {}; Object.values(SEASONAL).forEach(se => se.picks.forEach(p => { NOTE[p.n] = p.note; }));
+function dailyPicks(sk){
   const pool = COMBOS.filter(c => (c.se || []).includes(sk));
-  const rnd = mulberry32(hash32(todayStr()));
+  const rnd = mulberry32(hash32(todayStr() + '-' + sk));
   const arr = pool.slice();
   for(let i = arr.length - 1; i > 0; i--){ const j = Math.floor(rnd() * (i + 1)); const t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
   return arr.slice(0, 3);
 }
 function renderDaily(){
+  const sk = SKEY[curSeason];
+  const isNow = curSeason === seasonOfNow();
   const d = new Date();
-  document.getElementById('daily-date').textContent =
-    (d.getMonth()+1) + '月' + d.getDate() + '日 · 毎日入れ替わり · 今日は全員この3本';
-  const picks = dailyPicks();
-  document.getElementById('daily-cards').innerHTML = picks.map(c => lookCardHTML(c, null, 'd')).join('');
+  document.getElementById('daily-date').textContent = isNow
+    ? (d.getMonth()+1) + '月' + d.getDate() + '日 · 毎日入れ替わり · 今日は全員この3本'
+    : SEASONAL[curSeason].label + 'ならこの3本';
+  const picks = dailyPicks(sk);
+  document.getElementById('daily-cards').innerHTML = picks.map(c => lookCardHTML(c, NOTE[c.n] || null, 'd')).join('');
   picks.forEach(c => initLookImg(c.n, 'd'));
 }
 function renderSeasonBar(){
-  const bar = document.getElementById('season-bar');
-  bar.innerHTML = Object.entries(SEASONAL).map(([k, se]) =>
+  document.getElementById('season-bar').innerHTML = Object.entries(SEASONAL).map(([k, se]) =>
     `<button class="stab ${k===curSeason?'on':''}" onclick="pickSeason('${k}')">${se.label}</button>`).join('')
-    + '<span class="snote">季節ごとに3スタイル · ベーシック100から</span>';
+    + '<span class="snote">季節を切り替えて3本を見る</span>';
 }
 function pickSeason(k){ curSeason = k; renderLooks(); }
 function renderLooks(){
-  renderDaily();
   renderSeasonBar();
-  const picks = SEASONAL[curSeason].picks;
-  document.getElementById('season-cards').innerHTML = picks.map(p => lookCardHTML(CMAP[p.n], p.note, 's')).join('');
-  picks.forEach(p => initLookImg(p.n, 's'));
-  renderMine();
-}
-function renderMine(){
-  const last = loadLast();
-  const sec = document.getElementById('mine-section');
-  if(last && last.looks && last.looks.some(l => l.img)){
-    sec.style.display = 'block';
-    document.getElementById('mine-cards').innerHTML = last.looks.filter(l => l.img).map(l => `
-      <div class="look">
-        <div class="look-head"><div class="look-scene">${esc(l.scene)}</div><div class="look-title">${esc(l.title)}</div></div>
-        <div class="illus"><img src="${l.img}" onclick="openLb(this.src)"></div>
-        <div class="look-body"><p class="look-note">${esc(l.comment)}</p></div>
-      </div>`).join('');
-  } else sec.style.display = 'none';
+  renderDaily();
 }
 
 /* ---------- コーデ100（検索） ---------- */
