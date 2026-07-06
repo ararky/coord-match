@@ -32,6 +32,9 @@
   .sec-title { font-size: 1.08rem; font-weight: 800; letter-spacing: -0.01em; }
   .sec-sub { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sub); }
 
+  .hsel { font-family: var(--sans); font-size: 0.82rem; font-weight: 650; padding: 0.42rem 0.6rem; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; }
+  .cau { font-size: 0.74rem; color: #9a5b12; background: #fdf3e3; border: 1px solid #f0dcb8; border-radius: 8px; padding: 0.4rem 0.55rem; margin-top: 0.6rem; line-height: 1.5; }
+
   .look-head { display: flex; align-items: flex-start; gap: 0.6rem; }
   .look-head .lh-main { flex: 1; min-width: 0; }
   .savb { flex-shrink: 0; font-family: var(--sans); font-size: 0.72rem; font-weight: 650; padding: 0.32rem 0.6rem; border-radius: 9px; border: 1px solid var(--line); background: #fff; color: var(--sub); cursor: pointer; margin-top: 0.15rem; }
@@ -166,6 +169,7 @@
       <button class="seg-btn on" data-g="mens" onclick="pickGender('mens')">メンズ</button>
       <button class="seg-btn" data-g="womens" onclick="pickGender('womens')">ウィメンズ</button>
     </div>
+    <select id="height" class="hsel" onchange="setHeight(+this.value)" title="身長で似合う丈・バランスを調整"></select>
     <button class="btn solid sm cta" id="topcta" onclick="showView('setup')">自分の服で試す →</button>
   </header>
 
@@ -295,6 +299,41 @@ function comboPieces(c){
   const ids = [...(c.i||[])]; if(c.o) ids.push(c.o); ids.push(c.p, c.f, c.b, ...(c.x||[]));
   return ids.filter(Boolean);
 }
+/* ---------- 身長（似合う丈・バランス調整） ---------- */
+const HEIGHTS = { mens: [190,180,170,160], womens: [180,170,160,150] };
+const HDEF = { mens: 180, womens: 160 };
+const LONG = new Set(['OU-02','OU-03','OU-04','OU-13','OU-15','SH-16']); // 着丈の長いコート/ロングシャツ
+const VOL  = new Set(['OU-16','OU-09','OU-12']);                          // ボリュームの出るアウター
+let heightBy = { mens: 180, womens: 160 };
+try { heightBy = Object.assign(heightBy, JSON.parse(localStorage.getItem('mmf_height') || '{}')); } catch(e){}
+function curHeight(){ return heightBy[gender]; }
+function statureIdx(){ return Math.round((curHeight() - HDEF[gender]) / 10); } // 負=低め / 正=高め
+function proportionPhrase(){
+  const h = curHeight(), st = statureIdx();
+  const build = st <= -2 ? 'petite and compact' : st === -1 ? 'a little shorter than average'
+    : st >= 2 ? 'very tall and long-limbed' : st === 1 ? 'tall and long-limbed' : 'average';
+  return `Figure proportions: a ${build} build, roughly ${h}cm tall; keep all garment lengths (coat hem, jacket, sleeves, trouser break) balanced and flattering to this stature — not overwhelming a small frame, not looking too short on a tall one.`;
+}
+function heightCaution(c){
+  const st = statureIdx(); if(st >= 0) return '';
+  const ids = comboPieces(c);
+  if(ids.some(id => LONG.has(id))) return `${curHeight()}cmだと着丈が重く出やすい。丈短めのアウターに替えるとバランス◎`;
+  if(st <= -2 && ids.some(id => VOL.has(id))) return `${curHeight()}cmにはボリュームが勝ちがち。中を細くしてIラインを意識すると◎`;
+  return '';
+}
+function renderHeight(){
+  const sel = document.getElementById('height');
+  sel.innerHTML = HEIGHTS[gender].map(h => `<option value="${h}" ${h===curHeight()?'selected':''}>${h}cm</option>`).join('');
+}
+function setHeight(h){
+  heightBy[gender] = h;
+  try { localStorage.setItem('mmf_height', JSON.stringify(heightBy)); } catch(e){}
+  renderHeight();
+  renderLooks(); renderAll();
+  if(document.querySelector('#mix-cards .look')) renderMix();
+  if(document.getElementById('board-view').style.display !== 'none') renderBoard();
+}
+
 /* unified registry: numeric ids = catalog 100, string ids = synthesized mixes */
 const LOOKS = {}; COMBOS.forEach(c => LOOKS[c.n] = c);
 function registerLook(o){ LOOKS[o.n] = o; }                 // in-memory only
@@ -344,6 +383,7 @@ function lookCardHTML(c, note, pfx){
     <div class="look-body">
       ${note ? `<p class="look-note">${esc(note)}</p>` : ''}
       <div class="look-tags">${tagsHTML(c)}</div>
+      ${(function(){ const cau = heightCaution(c); return cau ? `<div class="cau">⚠ ${esc(cau)}</div>` : ''; })()}
     </div>
   </div>`;
 }
@@ -496,6 +536,7 @@ Do not draw a second person. Do not repeat or duplicate the figure. Do not make 
 LINE: all outlines in uniform EXTRA-THICK black lines, clean hand-drawn but not rough. No thin, delicate or faint lines anywhere.
 FIGURE: simplified into basic shapes, slightly awkward endearing proportions. Minimal face — dot eyes, simple nose, small mouth.
 OUTFIT — ${wear}, drawn slightly OVERSIZED with a boxy, relaxed, drapey modern Japanese city-boy silhouette: ${names.join('、')}.
+${proportionPhrase()}
 COLOR: flat solid fills only, limited to 2–4 key colours taken from the outfit. Plain white background. No shading, no gradients, no realistic textures, no photographic rendering.
 MOOD: ${c.s} — ${c.t}.
 No text, no logos, no UI, no captions, no borders.`;
@@ -566,9 +607,10 @@ function mkPickers(seedStr){
     for(const [v,w] of pairs){ if((r -= w) < 0) return v; } return pairs[0][0]; };
   return { rng, pick, chance, pickW };
 }
-/* season is a HARD constraint; only the formality band and avoid-list are relaxed. */
-function bestFor(cat, sk, fam, center, band, rng, avoid){
-  avoid = avoid || [];
+/* season is a HARD constraint; only the formality band and avoid-list are relaxed.
+   st = stature index (負=低め/正=高め): 低身長は長丈・大ボリュームを減点、高身長は加点。 */
+function bestFor(cat, sk, fam, center, band, rng, avoid, st){
+  avoid = avoid || []; st = st || 0;
   const inSeason = (POOL[cat] || []).filter(it => it.m.se.includes(sk));
   let cand = inSeason.filter(it => Math.abs(it.m.f - center) <= band && !avoid.includes(it.id));
   if(!cand.length) cand = inSeason.filter(it => !avoid.includes(it.id));
@@ -577,6 +619,8 @@ function bestFor(cat, sk, fam, center, band, rng, avoid){
   let best = null, bs = -1e9;
   for(const it of cand){
     let s = (it.m.tg.includes(fam) ? 3 : 0) - Math.abs(it.m.f - center) - it.m.tw * 0.7 + rng() * 1.6;
+    if(LONG.has(it.id)) s += st * 1.2;
+    if(VOL.has(it.id))  s += st * 0.8;
     if(s > bs){ bs = s; best = it; }
   }
   return best;
@@ -586,24 +630,29 @@ function seasonPick(cat, sk, rng){ const p = (POOL[cat] || []).filter(it => it.m
 function synth(seedStr, adv){
   const { rng, pick, chance, pickW } = mkPickers(seedStr);
   const sk = SKEY[seasonOfNow()];
+  const st = statureIdx();
   const fam = pickW(FAM_W), center = FAM_F[fam];
-  const pants = bestFor('PT', sk, fam, center, 1, rng) || seasonPick('PT', sk, rng);
+  const pants = bestFor('PT', sk, fam, center, 1, rng, [], st) || seasonPick('PT', sk, rng);
   const topCats = sk === 'su' ? [['SH',3],['TS',5]]
                  : sk === 'wi' ? [['SW',5],['SH',2],['TS',1]]
                  : [['SH',3],['SW',3],['TS',2]];
   const baseCat = pickW(topCats);
-  const base = bestFor(baseCat, sk, fam, center, 1, rng) || seasonPick(baseCat, sk, rng) || seasonPick('TS', sk, rng);
+  const base = bestFor(baseCat, sk, fam, center, 1, rng, [], st) || seasonPick(baseCat, sk, rng) || seasonPick('TS', sk, rng);
   const i = [base.id];
   const layerP = sk === 'wi' ? 0.6 : sk === 'su' ? 0.05 : 0.35;
   if(chance(layerP)){
-    if(baseCat === 'SW'){ const sh = bestFor('SH', sk, fam, center, 1, rng, [base.id]); if(sh) i.unshift(sh.id); }
-    else if(baseCat === 'SH'){ const sw = bestFor('SW', sk, fam, center, 1, rng); if(sw) i.push(sw.id); }
+    if(baseCat === 'SW'){ const sh = bestFor('SH', sk, fam, center, 1, rng, [base.id], st); if(sh) i.unshift(sh.id); }
+    else if(baseCat === 'SH'){ const sw = bestFor('SW', sk, fam, center, 1, rng, [], st); if(sw) i.push(sw.id); }
   }
   const outerP = sk === 'su' ? 0.25 : sk === 'wi' ? 0.95 : 0.7;
   let outer = null;
-  if(chance(outerP)){ const o = bestFor('OU', sk, fam, center, 2, rng); if(o) outer = o.id; }
-  const shoes = (bestFor('FT', sk, fam, center, 2, rng) || seasonPick('FT', sk, rng)).id;
-  const bag = (bestFor('BG', sk, fam, center, 2, rng) || seasonPick('BG', sk, rng)).id;
+  if(chance(outerP)){
+    // 最も低い身長帯は定番/標準でロングコートを避ける（冒険なら許容）。中間の低めは減点のみ。
+    const outerAvoid = (st <= -2 && adv < 2) ? [...LONG] : [];
+    const o = bestFor('OU', sk, fam, center, 2, rng, outerAvoid, st); if(o) outer = o.id;
+  }
+  const shoes = (bestFor('FT', sk, fam, center, 2, rng, [], st) || seasonPick('FT', sk, rng)).id;
+  const bag = (bestFor('BG', sk, fam, center, 2, rng, [], st) || seasonPick('BG', sk, rng)).id;
   const x = [];
   if(chance(0.45)){ const cp = bestFor('CP', sk, fam, center, 2, rng); if(cp) x.push(cp.id); }
   if(chance(0.8)){ const ac = bestFor('AC', sk, fam, center, 2, rng); if(ac && !x.includes(ac.id)) x.push(ac.id); }
@@ -618,10 +667,10 @@ function synth(seedStr, adv){
       const pool = POOL.AC.concat(POOL.CP).filter(it => it.m.se.includes(sk) && (it.m.tw >= 1 || it.m.tg.includes(offFam)) && (adv >= 2 || it.m.tw <= 1));
       if(pool.length){ const acc = pick(pool);
         outfit.x = [acc.id].concat(outfit.x.filter(id => id.slice(0,2) !== acc.id.slice(0,2))).slice(0,2); brk = acc; }
-    } else if(slot === 'f'){ const alt = bestFor('FT', sk, offFam, FAM_F[offFam], 2, rng, [shoes]); if(alt){ outfit.f = alt.id; brk = alt; } }
-    else if(slot === 'b'){ const alt = bestFor('BG', sk, offFam, FAM_F[offFam], 2, rng, [bag]); if(alt){ outfit.b = alt.id; brk = alt; } }
-    else if(slot === 'o' && outer){ const alt = bestFor('OU', sk, offFam, FAM_F[offFam], 2, rng, [outer]); if(alt){ outfit.o = alt.id; brk = alt; } }
-    else if(slot === 'i'){ const alt = bestFor(pick(['SH','TS']), sk, offFam, FAM_F[offFam], 2, rng, i); if(alt){ outfit.i = [alt.id]; brk = alt; } }
+    } else if(slot === 'f'){ const alt = bestFor('FT', sk, offFam, FAM_F[offFam], 2, rng, [shoes], st); if(alt){ outfit.f = alt.id; brk = alt; } }
+    else if(slot === 'b'){ const alt = bestFor('BG', sk, offFam, FAM_F[offFam], 2, rng, [bag], st); if(alt){ outfit.b = alt.id; brk = alt; } }
+    else if(slot === 'o' && outer){ const alt = bestFor('OU', sk, offFam, FAM_F[offFam], 2, rng, [outer], st); if(alt){ outfit.o = alt.id; brk = alt; } }
+    else if(slot === 'i'){ const alt = bestFor(pick(['SH','TS']), sk, offFam, FAM_F[offFam], 2, rng, i, st); if(alt){ outfit.i = [alt.id]; brk = alt; } }
   }
 
   // ---- 色数の予算 ----
@@ -634,7 +683,7 @@ function synth(seedStr, adv){
     for(const cat of ['AC','CP','BG']){
       const victim = ids.find(id => id.slice(0,2) === cat && (IMAP[id].m.col||[]).some(c => !SOFTCOL.has(c)) && (!brk || id !== brk.id));
       if(victim){
-        if(cat === 'BG'){ const nb = bestFor('BG', sk, fam, center, 2, rng, [outfit.b]); if(nb) outfit.b = nb.id; }
+        if(cat === 'BG'){ const nb = bestFor('BG', sk, fam, center, 2, rng, [outfit.b], st); if(nb) outfit.b = nb.id; }
         else outfit.x = outfit.x.filter(id => id !== victim);
         dropped = true; break;
       }
@@ -806,7 +855,9 @@ function pickStyle(k){ styleKey = k; renderStyles(); }
 function pickGender(g){ gender = g;
   try { localStorage.setItem('mmf_gender', g); } catch(e){}
   document.querySelectorAll('#ggender .seg-btn').forEach(b => b.classList.toggle('on', b.dataset.g === g));
-  renderLooks(); renderAll(); }
+  renderHeight();
+  renderLooks(); renderAll();
+  if(document.querySelector('#mix-cards .look')) renderMix(); }
 
 const drop = document.getElementById('drop');
 document.getElementById('file').addEventListener('change', e => handleFiles(e.target.files));
@@ -914,6 +965,7 @@ Do not draw a second person. Do not repeat or duplicate the figure. Do not make 
 LINE: all outlines in uniform EXTRA-THICK black lines, clean hand-drawn but not rough. No thin, delicate or faint lines anywhere.
 FIGURE: simplified into basic shapes, slightly awkward endearing proportions. Minimal face — dot eyes, simple nose, small mouth.
 OUTFIT — this ${s.label} outfit, drawn slightly OVERSIZED with a boxy, relaxed, drapey modern silhouette: ${pieces}.
+${proportionPhrase()}
 Use the provided clothing photographs as reference for the garments' key colours and patterns, but simplify them into flat solid fills — keep each garment recognisable by shape and colour.
 COLOR: flat solid fills only, limited to 2–4 key colours (palette leaning: ${s.palette}). Plain white background. No shading, no gradients, no realistic textures, no photographic rendering.
 No text, no logos, no UI, no captions, no borders.`;
