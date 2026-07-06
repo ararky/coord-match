@@ -37,6 +37,10 @@
   .savb { flex-shrink: 0; font-family: var(--sans); font-size: 0.72rem; font-weight: 650; padding: 0.32rem 0.6rem; border-radius: 9px; border: 1px solid var(--line); background: #fff; color: var(--sub); cursor: pointer; margin-top: 0.15rem; }
   .savb.on { background: var(--blue); border-color: var(--blue); color: #fff; }
 
+  .mix-bar { display: flex; align-items: center; gap: 0.8rem; margin: 0.2rem 0 1.1rem; flex-wrap: wrap; }
+  .mix-hint { font-size: 0.76rem; color: var(--sub); }
+  .mix-shuffle { margin-left: auto; }
+
   .season-bar { display: flex; align-items: center; gap: 0.5rem; margin: 0.2rem 0 1rem; flex-wrap: wrap; }
   .season-bar .stab { font-family: var(--sans); font-size: 0.92rem; font-weight: 700; padding: 0.5rem 1.15rem; border-radius: 11px; border: 1px solid var(--line); background: #fff; color: var(--sub); cursor: pointer; }
   .season-bar .stab.on { background: var(--ink); color: #fff; border-color: transparent; }
@@ -154,6 +158,7 @@
     <nav class="nav" id="nav">
       <button data-v="looks" class="on" onclick="showView('looks')">季節のコーデ</button>
       <button data-v="all" onclick="showView('all')">コーデ100</button>
+      <button data-v="mix" onclick="showView('mix')">ミックス</button>
       <button data-v="items" onclick="showView('items')">アイテム100</button>
       <button data-v="board" onclick="showView('board')">ボード</button>
     </nav>
@@ -191,6 +196,21 @@
   <div id="items-view" style="display:none">
     <div class="count" id="items-count"></div>
     <div id="items-list"></div>
+  </div>
+
+  <!-- ミックス（合成エンジン） -->
+  <div id="mix-view" style="display:none">
+    <div class="sec-head"><span class="sec-title">ミックス</span><span class="sec-sub">ベーシック100を無限に組み替え · 外しは一点</span></div>
+    <div class="mix-bar">
+      <div class="seg" id="mix-adv">
+        <button class="seg-btn" data-a="0" onclick="setMixAdv(0)">定番</button>
+        <button class="seg-btn on" data-a="1" onclick="setMixAdv(1)">標準</button>
+        <button class="seg-btn" data-a="2" onclick="setMixAdv(2)">冒険</button>
+      </div>
+      <span class="mix-hint">左＝王道で堅実／右＝外しを効かせて意外性を</span>
+      <button class="btn solid sm mix-shuffle" onclick="reshuffleMix()">↻ 新しく6本</button>
+    </div>
+    <div id="mix-cards" class="gallery"></div>
   </div>
 
   <!-- マイボード -->
@@ -275,11 +295,18 @@ function comboPieces(c){
   const ids = [...(c.i||[])]; if(c.o) ids.push(c.o); ids.push(c.p, c.f, c.b, ...(c.x||[]));
   return ids.filter(Boolean);
 }
-const CMAP = {}; COMBOS.forEach(c => CMAP[c.n] = c);
+/* unified registry: numeric ids = catalog 100, string ids = synthesized mixes */
+const LOOKS = {}; COMBOS.forEach(c => LOOKS[c.n] = c);
+function registerLook(o){ LOOKS[o.n] = o; }                 // in-memory only
+function persistSpec(o){ if(typeof o.n !== 'string') return; // written only when saved to board
+  try { const m = JSON.parse(localStorage.getItem('mmf_specs') || '{}'); m[o.n] = o; localStorage.setItem('mmf_specs', JSON.stringify(m)); } catch(e){} }
+(function loadSpecs(){ try { const m = JSON.parse(localStorage.getItem('mmf_specs') || '{}'); Object.values(m).forEach(o => { LOOKS[o.n] = o; }); } catch(e){} })();
+const CMAP = LOOKS; // back-compat alias
 
 /* ---------- views ---------- */
-const VIEWS = ['looks','all','items','board','setup','loading','results'];
-const VIEW_EL = { looks:'looks-view', all:'all-view', items:'items-view', board:'board-view' };
+const VIEWS = ['looks','all','mix','items','board','setup','loading','results'];
+const VIEW_EL = { looks:'looks-view', all:'all-view', mix:'mix-view', items:'items-view', board:'board-view' };
+const BROWSE = ['looks','all','mix','items','board'];
 function showView(v){
   VIEWS.forEach(k => {
     const el = document.getElementById(VIEW_EL[k] || k);
@@ -288,8 +315,9 @@ function showView(v){
     else el.style.display = (k === v) ? 'block' : 'none';
   });
   document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
-  document.getElementById('topcta').style.display = (v==='looks'||v==='all'||v==='items'||v==='board') ? '' : 'none';
+  document.getElementById('topcta').style.display = BROWSE.includes(v) ? '' : 'none';
   if(v === 'board') renderBoard();
+  if(v === 'mix' && !document.querySelector('#mix-cards .look')) renderMix();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -303,13 +331,14 @@ function tagsHTML(c){
 }
 function lookCardHTML(c, note, pfx){
   const saved = isSaved(c.n);
+  const badge = (typeof c.n === 'number') ? `<span class="look-no">#${c.n}</span>` : `<span class="look-no">MIX</span>`;
   return `<div class="look">
     <div class="look-head">
       <div class="lh-main">
         <div class="look-scene">${esc(c.s)}</div>
-        <div class="look-title">${esc(c.t)}<span class="look-no">#${c.n}</span></div>
+        <div class="look-title">${esc(c.t)}${badge}</div>
       </div>
-      <button class="savb ${saved?'on':''}" data-n="${c.n}" onclick="toggleBoard(${c.n})">${saved?'★ 保存済み':'☆ 保存'}</button>
+      <button class="savb ${saved?'on':''}" data-n="${c.n}" onclick="toggleBoard('${c.n}')">${saved?'★ 保存済み':'☆ 保存'}</button>
     </div>
     <div class="illus" id="cillus-${pfx}-${c.n}"><div class="mini-loader"></div></div>
     <div class="look-body">
@@ -320,11 +349,13 @@ function lookCardHTML(c, note, pfx){
 }
 
 /* ---------- マイボード（保存） ---------- */
-function getBoard(){ try { return JSON.parse(localStorage.getItem('mmf_board') || '[]'); } catch(e){ return []; } }
-function isSaved(n){ return getBoard().includes(n); }
+function getBoard(){ try { return (JSON.parse(localStorage.getItem('mmf_board') || '[]')).map(String); } catch(e){ return []; } }
+function isSaved(n){ return getBoard().includes(String(n)); }
 function toggleBoard(n){
+  n = String(n);
   let a = getBoard();
-  if(a.includes(n)) a = a.filter(x => x !== n); else a.push(n);
+  if(a.includes(n)){ a = a.filter(x => x !== n); }
+  else { a.push(n); if(LOOKS[n] && typeof LOOKS[n].n === 'string') persistSpec(LOOKS[n]); } // persist synth spec on save
   lsSet('mmf_board', JSON.stringify(a));
   const on = a.includes(n);
   document.querySelectorAll(`.savb[data-n="${n}"]`).forEach(b => {
@@ -336,8 +367,8 @@ function renderBoard(){
   const a = getBoard();
   document.getElementById('board-count').textContent = a.length ? a.length + ' コーデ保存中' : '';
   document.getElementById('board-empty').style.display = a.length ? 'none' : 'block';
-  document.getElementById('board-cards').innerHTML = a.map(n => CMAP[n] ? lookCardHTML(CMAP[n], null, 'b') : '').join('');
-  a.forEach(n => { if(CMAP[n]) initLookImg(n, 'b'); });
+  document.getElementById('board-cards').innerHTML = a.map(n => LOOKS[n] ? lookCardHTML(LOOKS[n], null, 'b') : '').join('');
+  a.forEach(n => { if(LOOKS[n]) initLookImg(n, 'b'); });
 }
 
 /* illustration resolution: cache → bundled looks/{n}.jpg → generate button */
@@ -365,22 +396,25 @@ function setIllusImg(box, src, withDl, n, pfx){
 }
 function imgKey(n){ return gender === 'womens' ? 'mmf_cimg_w' + n : 'mmf_cimg_' + n; }
 function bundledPath(n){ return gender === 'womens' ? 'looks/w' + n + '.jpg' : 'looks/' + n + '.jpg'; }
+function genBtnHTML(n, pfx){
+  return `<button class="genb" onclick="genLookIllus('${n}', '${pfx}')">イラストを生成</button><div class="gen-hint">Geminiキーで1回だけ生成（約$0.04）・端末に保存されます</div>`;
+}
 function initLookImg(n, pfx){
   const box = document.getElementById('cillus-' + pfx + '-' + n);
   if(!box) return;
   const tok = box.__tok = (box.__tok || 0) + 1;
   const cached = lsGet(imgKey(n));
   if(cached){ setIllusImg(box, cached, true, n, pfx); return; }
+  if(typeof LOOKS[n] === 'object' && typeof LOOKS[n].n === 'string'){ // synthesized mix → no bundled asset
+    box.innerHTML = genBtnHTML(n, pfx); return;
+  }
   const probe = new Image();
   probe.onload = () => { if(box.__tok === tok) setIllusImg(box, bundledPath(n), false, n, pfx); };
-  probe.onerror = () => {
-    if(box.__tok !== tok) return;
-    box.innerHTML = `<button class="genb" onclick="genLookIllus(${n}, '${pfx}')">イラストを生成</button><div class="gen-hint">Geminiキーで1回だけ生成（約$0.04）・端末に保存されます</div>`;
-  };
+  probe.onerror = () => { if(box.__tok === tok) box.innerHTML = genBtnHTML(n, pfx); };
   probe.src = bundledPath(n);
 }
 /* after a successful generation, refresh this look's box in every view */
-function refreshLookBoxes(n){ ['d','s','a','b'].forEach(p => initLookImg(n, p)); }
+function refreshLookBoxes(n){ ['d','s','a','b','x'].forEach(p => initLookImg(n, p)); }
 
 /* ---- single-figure safety net ----
    The image model occasionally draws the outfit twice (two variants side by side)
@@ -469,7 +503,7 @@ No text, no logos, no UI, no captions, no borders.`;
 async function genLookIllus(n, pfx){
   pfx = pfx || 's';
   const box = document.getElementById('cillus-' + pfx + '-' + n);
-  const c = CMAP[n];
+  const c = LOOKS[n];
   if(!box || !c) return;
   const gkey = localStorage.getItem(GKEY_LS);
   if(!gkey){
@@ -499,7 +533,7 @@ async function genLookIllus(n, pfx){
         lsSet(imgKey(n), src);
       } catch(e){}
       setIllusImg(box, src, true, n, pfx);
-      ['d','s','a','b'].forEach(p => {
+      ['d','s','a','b','x'].forEach(p => {
         if(p === pfx) return;
         const ob = document.getElementById('cillus-' + p + '-' + n);
         if(ob) setIllusImg(ob, src, true, n, p);
@@ -508,9 +542,130 @@ async function genLookIllus(n, pfx){
     img.onerror = () => { box.innerHTML = '<div class="fail">画像を表示できませんでした</div>'; };
     img.src = raw;
   } catch(e){
-    box.innerHTML = `<div class="fail">生成に失敗：${esc(String(e.message||e)).slice(0,140)}<br><button class="genb" style="margin-top:0.6rem" onclick="genLookIllus(${n}, '${pfx}')">もう一度</button></div>`;
+    box.innerHTML = `<div class="fail">生成に失敗：${esc(String(e.message||e)).slice(0,140)}<br><button class="genb" style="margin-top:0.6rem" onclick="genLookIllus('${n}', '${pfx}')">もう一度</button></div>`;
   }
 }
+
+/* ---------- ④ 合成エンジン（制約＋外し1点＋定番↔冒険） ---------- */
+const POOL = {}; CATALOG.forEach(it => { const k = it.id.slice(0,2); (POOL[k] = POOL[k] || []).push(it); });
+const SOFTCOL = new Set(['wh','bk','gy','dn','be','ec']); // この世界観の基調色（色数にカウントしない）
+const FAM_LABEL = { trad:'アメトラ', cl:'クリーン', mil:'ミリタリー', work:'ワーク', st:'ストリート', out:'アウトドア', fr:'フレンチ', md:'モード' };
+const FAM_W = [['trad',5],['cl',5],['mil',4],['work',4],['st',4],['out',3],['fr',2],['md',2]];
+const FAM_F = { trad:3, cl:3, mil:2, work:2, st:2, out:1, fr:3, md:3 };
+const ADV_LABEL = ['定番','標準','冒険'];
+const ADV_COLBUD = [2, 3, 4];
+
+function statementSet(ids){ const s = new Set();
+  ids.forEach(id => ((IMAP[id] && IMAP[id].m && IMAP[id].m.col) || []).forEach(c => { if(!SOFTCOL.has(c)) s.add(c); }));
+  return s; }
+function mkPickers(seedStr){
+  const rng = mulberry32(hash32(seedStr));
+  const pick = arr => arr[Math.floor(rng() * arr.length)];
+  const chance = p => rng() < p;
+  const pickW = pairs => { let tot = pairs.reduce((a,b)=>a+b[1],0), r = rng()*tot;
+    for(const [v,w] of pairs){ if((r -= w) < 0) return v; } return pairs[0][0]; };
+  return { rng, pick, chance, pickW };
+}
+/* season is a HARD constraint; only the formality band and avoid-list are relaxed. */
+function bestFor(cat, sk, fam, center, band, rng, avoid){
+  avoid = avoid || [];
+  const inSeason = (POOL[cat] || []).filter(it => it.m.se.includes(sk));
+  let cand = inSeason.filter(it => Math.abs(it.m.f - center) <= band && !avoid.includes(it.id));
+  if(!cand.length) cand = inSeason.filter(it => !avoid.includes(it.id));
+  if(!cand.length) cand = inSeason;              // never drop the season filter
+  if(!cand.length) return null;
+  let best = null, bs = -1e9;
+  for(const it of cand){
+    let s = (it.m.tg.includes(fam) ? 3 : 0) - Math.abs(it.m.f - center) - it.m.tw * 0.7 + rng() * 1.6;
+    if(s > bs){ bs = s; best = it; }
+  }
+  return best;
+}
+function seasonPick(cat, sk, rng){ const p = (POOL[cat] || []).filter(it => it.m.se.includes(sk));
+  const arr = p.length ? p : (POOL[cat] || []); return arr[Math.floor(rng() * arr.length)]; }
+function synth(seedStr, adv){
+  const { rng, pick, chance, pickW } = mkPickers(seedStr);
+  const sk = SKEY[seasonOfNow()];
+  const fam = pickW(FAM_W), center = FAM_F[fam];
+  const pants = bestFor('PT', sk, fam, center, 1, rng) || seasonPick('PT', sk, rng);
+  const topCats = sk === 'su' ? [['SH',3],['TS',5]]
+                 : sk === 'wi' ? [['SW',5],['SH',2],['TS',1]]
+                 : [['SH',3],['SW',3],['TS',2]];
+  const baseCat = pickW(topCats);
+  const base = bestFor(baseCat, sk, fam, center, 1, rng) || seasonPick(baseCat, sk, rng) || seasonPick('TS', sk, rng);
+  const i = [base.id];
+  const layerP = sk === 'wi' ? 0.6 : sk === 'su' ? 0.05 : 0.35;
+  if(chance(layerP)){
+    if(baseCat === 'SW'){ const sh = bestFor('SH', sk, fam, center, 1, rng, [base.id]); if(sh) i.unshift(sh.id); }
+    else if(baseCat === 'SH'){ const sw = bestFor('SW', sk, fam, center, 1, rng); if(sw) i.push(sw.id); }
+  }
+  const outerP = sk === 'su' ? 0.25 : sk === 'wi' ? 0.95 : 0.7;
+  let outer = null;
+  if(chance(outerP)){ const o = bestFor('OU', sk, fam, center, 2, rng); if(o) outer = o.id; }
+  const shoes = (bestFor('FT', sk, fam, center, 2, rng) || seasonPick('FT', sk, rng)).id;
+  const bag = (bestFor('BG', sk, fam, center, 2, rng) || seasonPick('BG', sk, rng)).id;
+  const x = [];
+  if(chance(0.45)){ const cp = bestFor('CP', sk, fam, center, 2, rng); if(cp) x.push(cp.id); }
+  if(chance(0.8)){ const ac = bestFor('AC', sk, fam, center, 2, rng); if(ac && !x.includes(ac.id)) x.push(ac.id); }
+  const outfit = { i, o: outer, p: pants.id, f: shoes, b: bag, x };
+
+  // ---- 外し 1点 ----
+  let brk = null;
+  if(adv >= 1){
+    const offFam = pickW(FAM_W.filter(p => p[0] !== fam));
+    const slot = pick(adv >= 2 ? ['o','f','x','i'] : ['f','x','b']);
+    if(slot === 'x'){
+      const pool = POOL.AC.concat(POOL.CP).filter(it => it.m.se.includes(sk) && (it.m.tw >= 1 || it.m.tg.includes(offFam)) && (adv >= 2 || it.m.tw <= 1));
+      if(pool.length){ const acc = pick(pool);
+        outfit.x = [acc.id].concat(outfit.x.filter(id => id.slice(0,2) !== acc.id.slice(0,2))).slice(0,2); brk = acc; }
+    } else if(slot === 'f'){ const alt = bestFor('FT', sk, offFam, FAM_F[offFam], 2, rng, [shoes]); if(alt){ outfit.f = alt.id; brk = alt; } }
+    else if(slot === 'b'){ const alt = bestFor('BG', sk, offFam, FAM_F[offFam], 2, rng, [bag]); if(alt){ outfit.b = alt.id; brk = alt; } }
+    else if(slot === 'o' && outer){ const alt = bestFor('OU', sk, offFam, FAM_F[offFam], 2, rng, [outer]); if(alt){ outfit.o = alt.id; brk = alt; } }
+    else if(slot === 'i'){ const alt = bestFor(pick(['SH','TS']), sk, offFam, FAM_F[offFam], 2, rng, i); if(alt){ outfit.i = [alt.id]; brk = alt; } }
+  }
+
+  // ---- 色数の予算 ----
+  let guard = 0;
+  while(guard++ < 5){
+    const stset = statementSet(comboPieces(outfit));
+    if(stset.size <= ADV_COLBUD[adv]) break;
+    const ids = comboPieces(outfit);
+    let dropped = false;
+    for(const cat of ['AC','CP','BG']){
+      const victim = ids.find(id => id.slice(0,2) === cat && (IMAP[id].m.col||[]).some(c => !SOFTCOL.has(c)) && (!brk || id !== brk.id));
+      if(victim){
+        if(cat === 'BG'){ const nb = bestFor('BG', sk, fam, center, 2, rng, [outfit.b]); if(nb) outfit.b = nb.id; }
+        else outfit.x = outfit.x.filter(id => id !== victim);
+        dropped = true; break;
+      }
+    }
+    if(!dropped) break;
+  }
+
+  const ids = comboPieces(outfit);
+  outfit.n = 'm' + hash32(ids.join('|')).toString(36);
+  outfit._fam = fam; outfit._adv = adv;
+  outfit.s = FAM_LABEL[fam] + ' · ' + ADV_LABEL[adv];
+  outfit.t = (adv === 0 || !brk) ? '王道の' + FAM_LABEL[fam] + 'を、崩さず端正に。'
+           : FAM_LABEL[fam] + 'の王道に、' + iname(brk.id) + 'で一点だけ外した。';
+  return outfit;
+}
+
+let mixAdv = 1;
+let mixSeed = todayStr();
+function renderMix(){
+  const outs = [], seen = new Set();
+  for(let k = 0; outs.length < 6 && k < 60; k++){
+    const o = synth(mixSeed + '-' + mixAdv + '-' + k, mixAdv);
+    if(seen.has(o.n)) continue;
+    seen.add(o.n); registerLook(o); outs.push(o);
+  }
+  document.querySelectorAll('#mix-adv .seg-btn').forEach(b => b.classList.toggle('on', +b.dataset.a === mixAdv));
+  document.getElementById('mix-cards').innerHTML = outs.map(o => lookCardHTML(o, null, 'x')).join('');
+  outs.forEach(o => initLookImg(o.n, 'x'));
+}
+function setMixAdv(a){ mixAdv = a; renderMix(); }
+function reshuffleMix(){ mixSeed = 'r' + Date.now(); renderMix(); }
 
 /* ---------- 季節のコーデ ---------- */
 function seasonOfNow(){ const m = new Date().getMonth() + 1;
