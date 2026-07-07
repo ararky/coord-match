@@ -39,6 +39,13 @@
   .look-head .lh-main { flex: 1; min-width: 0; }
   .savb { flex-shrink: 0; font-family: var(--sans); font-size: 0.72rem; font-weight: 650; padding: 0.32rem 0.6rem; border-radius: 9px; border: 1px solid var(--line); background: #fff; color: var(--sub); cursor: pointer; margin-top: 0.15rem; }
   .savb.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .acts { display: flex; gap: 0.35rem; flex-shrink: 0; }
+  .shareb { padding: 0.32rem 0.5rem; }
+  #toast { position: fixed; left: 50%; bottom: 1.6rem; transform: translateX(-50%) translateY(1.2rem); background: var(--ink); color: #fff; font-size: 0.82rem; font-weight: 650; padding: 0.7rem 1.1rem; border-radius: 12px; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 200; }
+  #toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .shared-banner { background: #eef2fe; border: 1px solid #cfdcfb; border-radius: 16px; padding: 1rem 1.1rem; margin-bottom: 1.2rem; }
+  .shared-banner .sb-k { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--blue); font-weight: 700; }
+  .shared-banner .sb-close { float: right; background: none; border: none; color: var(--sub); cursor: pointer; font-size: 0.8rem; }
 
   .feat-head { display: flex; align-items: center; gap: 0.7rem; margin: 0.2rem 0 0.5rem; }
   .feat-vol { font-family: var(--mono); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; color: #fff; background: var(--blue); padding: 0.2rem 0.55rem; border-radius: 7px; }
@@ -90,8 +97,12 @@
   .cat-group { margin: 1.4rem 0 0; }
   .cat-title { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--sub); margin-bottom: 0.6rem; }
   .item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0.45rem; }
-  .item-chip { display: flex; align-items: center; gap: 0.5rem; background: #fff; border: 1px solid var(--line-soft); border-radius: 11px; padding: 0.55rem 0.7rem; font-size: 0.82rem; }
+  .item-chip { display: flex; flex-direction: column; align-items: stretch; gap: 0.4rem; background: #fff; border: 1px solid var(--line-soft); border-radius: 11px; padding: 0.55rem 0.7rem; font-size: 0.82rem; }
+  .item-chip .ic-top { display: flex; align-items: center; gap: 0.5rem; }
   .item-chip .iid { font-family: var(--mono); font-size: 0.6rem; color: var(--a1); font-weight: 700; flex-shrink: 0; }
+  .item-chip.has-edu { border-color: var(--a1); }
+  .iedu { font-size: 0.73rem; line-height: 1.55; color: var(--sub); }
+  .iedu::before { content: '◆ '; color: var(--a1); font-size: 0.72em; }
 
   /* setup / shared */
   .card { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 22px; padding: 1.3rem 1.3rem; margin-top: 1.1rem; box-shadow: var(--shadow); }
@@ -184,6 +195,7 @@
 
   <!-- 季節のコーデ -->
   <div id="looks-view">
+    <div id="shared" class="shared-banner" style="display:none"></div>
     <div class="sec-head"><span class="sec-title">今日の3コーデ</span><span class="sec-sub" id="daily-date"></span></div>
     <div class="season-bar" id="season-bar"></div>
     <div id="daily-cards" class="gallery wide3"></div>
@@ -305,12 +317,50 @@
 </div>
 
 <div id="lightbox" onclick="closeLb()"><span class="close">×</span><img id="lb-img" alt=""></div>
+<div id="toast"></div>
 
 <script src="data.js"></script>
 <script>
 /* ---------- catalog helpers ---------- */
 const IMAP = {}; CATALOG.forEach(it => IMAP[it.id] = it);
 function iname(id){ return IMAP[id] ? IMAP[id].n : id; }
+/* D: この定番の「本物」——なぜ残るのか／どこで見分けるか（渋く短く） */
+const EDU = {
+  'SH-01': '襟のロールと台襟の低さが命。第一ボタンを外して自然に立つ襟が本物、ペタッと寝るものは選ばない。',
+  'SH-03': '経(たて)に色糸・緯(よこ)に白の平織り。洗うほど霜が降りたように白茶ける——その退色こそが値打ち。',
+  'SH-05': '起毛が生地の両面に効いているか。表だけのものはすぐ毛玉になる。厚手ほど長く着られる。',
+  'SW-01': '編み地を横に使い縮みを殺したリバースウィーブ構造。脇の霜降りリブと重い生地が、10年着ても型崩れしない理由。',
+  'SW-07': 'シェトランド諸島の羊毛。最初はチクチクするが、着込むほど毛が寝て自分の肌に馴染む。',
+  'SW-08': 'シェトランド諸島の羊毛。最初はチクチクするが、着込むほど毛が寝て自分の肌に馴染む。',
+  'SW-09': '一目ずつ手で編まれた漁師のニット。ケーブルの一つひとつに意味がある。機械編みの平板さとは密度が違う。',
+  'TS-01': 'ポケットの位置と首リブの詰まりで品が決まる。透けない厚み・首がヨレない編みなら、一枚で成立する。',
+  'TS-05': '表面の凹凸(鹿の子)が汗を逃がし、襟が自立する。襟腰のあるものは顔映りが変わる。',
+  'PT-01': '糊のついた未洗い(リジッド)から穿き、自分の体で色を落とす。セルビッジ(赤耳)と縦落ちが、量産品と分ける印。',
+  'PT-04': '軍のチノクロスが源流。厚手の綾織りで、皺すら景色になる。ペラいポリ混は光って安く見える。',
+  'PT-06': '米軍作業着由来のパッチポケット。ごわつく生地が体で馴染み、股上の深さが今のシルエットに効く。',
+  'PT-07': 'フランス軍が生んだ最も美しい軍パン。裾の絞りとテーパード、コットンの目の詰まりが、他のミリタリーと格が違う。',
+  'PT-08': '畝(うね)が太いほど武骨で暖かい。太畝(8ウェール前後)を選ぶと秋冬の主役になる。',
+  'PT-11': '一本の上質なグレーフラノが、スニーカーもローファーも引き上げる。ウールの落ち感と裾のワンクッションが品を作る。',
+  'OU-01': '金ボタンの紺ブレは、Tシャツにもデニムにも効く万能礼装。肩の縫い目が自分の肩に乗るサイズだけが美しい。',
+  'OU-03': 'バルマカーンの丸みある襟が、スーツにも私服にも中立に効く。第一ボタンを留めれば比翼で表情が変わる。',
+  'OU-05': '前だけプリーツの2nd型が最もバランスがいい。肘と裾から色が抜けていく過程を着る服。',
+  'OU-06': '本来は塗装工の上っ張り。三つのパッチポケットと箱襟。無骨だが、羽織るだけで一枚が締まる。',
+  'OU-07': 'フードを襟に収納する米軍フィールドの完成形。エポレットもドローコードも、機能がそのまま意匠になっている。',
+  'OU-09': 'コットン6:ナイロン4の記憶。濡れると繊維が膨らみ水を止める、化学に頼らない防水。色落ちも味のうち。',
+  'FT-01': 'グレーのスエードは合わせを選ばない。作りの良い一足は甲とソールの返りが違い、疲れない。',
+  'FT-03': '緑タブの本家は穴あきスリーストライプ。白レザーは磨けば戻る——履き潰さず、育てる白スニーカー。',
+  'FT-05': 'ワッフルソールと極シンプルな一足。デッキシューズの原点で、細身のシルエットがパンツの裾を軽くする。',
+  'FT-09': 'モカのステッチが手縫いなら一生もの。グッドイヤー製法ならソール交換で30年履ける。接着の安物とは寿命が違う。',
+  'FT-10': 'クレープソールとモカ縫いのアイコン。ころんとした甲が、きれいめを程よく崩す。GTX版なら雨も気にならない。',
+  'BG-01': 'ロールトップと本革ボトムの二気室。飾りのない容量主義が、何を着ても浮かない理由。',
+  'BG-06': '氷を運ぶために作られたキャンバス。ヘタらない厚手生地で、使うほど手に馴染み、角が立ってくる。',
+  'CP-01': '6パネル・無地・つばは適度な湾曲。ロゴの無いものを選ぶと、どんな年齢でも子供っぽくならない。',
+  'CP-02': '6パネル・無地・つばは適度な湾曲。ロゴの無いものを選ぶと、どんな年齢でも子供っぽくならない。',
+  'CP-03': '折り返しの深さで印象が決まる。浅く被れば今の気分。ウール100%なら型崩れせず頭に沿う。',
+  'AC-05': '丸みのある逆三角のボストン型は、知的さと素朴さの中間。アセテートの厚みが顔に陰影を作る。',
+  'AC-06': '装いの最後に効く一点。全身をカジュアルで通した先の金無垢が、こなれと余裕を一気に語る。',
+  'AC-09': '靴と色を合わせるのが約束。使うほど艶が出るヌメ革を選べば、経年で自分だけの色になる。'
+};
 function comboPieces(c){
   const ids = [...(c.i||[])]; if(c.o) ids.push(c.o); ids.push(c.p, c.f, c.b, ...(c.x||[]));
   return ids.filter(Boolean);
@@ -353,6 +403,7 @@ function setHeight(h){
 /* unified registry: numeric ids = catalog 100, string ids = synthesized mixes */
 const LOOKS = {}; COMBOS.forEach(c => LOOKS[c.n] = c);
 function registerLook(o){ LOOKS[o.n] = o; }                 // in-memory only
+function pidOf(c){ return 'p' + hash32([c.scene, c.title, (c.use||[]).join(','), (c.add||[]).join(',')].join('|')).toString(36); } // C: stable id for a photo look
 function persistSpec(o){ if(typeof o.n !== 'string') return; // written only when saved to board
   try { const m = JSON.parse(localStorage.getItem('mmf_specs') || '{}'); m[o.n] = o; localStorage.setItem('mmf_specs', JSON.stringify(m)); } catch(e){} }
 (function loadSpecs(){ try { const m = JSON.parse(localStorage.getItem('mmf_specs') || '{}'); Object.values(m).forEach(o => { LOOKS[o.n] = o; }); } catch(e){} })();
@@ -385,7 +436,29 @@ function tagsHTML(c){
   [c.p, c.f, c.b, ...(c.x||[])].filter(Boolean).forEach(id => t.push(`<span class="tag" title="${id}">${esc(iname(id))}</span>`));
   return t.join('');
 }
+function photoCardHTML(c, pfx){ // C: card for a look built from the user's own clothes
+  const saved = isSaved(c.n);
+  const tags = (c.use||[]).map(u => `<span class="tag">${esc(u)}</span>`).join('')
+    + (c.add||[]).map(a => `<span class="tag ou">＋${esc(a)}</span>`).join('');
+  return `<div class="look">
+    <div class="look-head">
+      <div class="lh-main">
+        <div class="look-scene">${esc(c.scene || c.s)}</div>
+        <div class="look-title">${esc(c.title || c.t)}<span class="look-no">MINE</span></div>
+      </div>
+      <div class="acts">
+        <button class="savb ${saved?'on':''}" data-n="${c.n}" onclick="toggleBoard('${c.n}')">${saved?'★ 保存済み':'☆ 保存'}</button>
+      </div>
+    </div>
+    <div class="illus" id="cillus-${pfx}-${c.n}"><div class="mini-loader"></div></div>
+    <div class="look-body">
+      ${c.comment ? `<p class="look-note">${esc(c.comment)}</p>` : ''}
+      <div class="look-tags">${tags}</div>
+    </div>
+  </div>`;
+}
 function lookCardHTML(c, note, pfx){
+  if(c.photo) return photoCardHTML(c, pfx);
   const saved = isSaved(c.n);
   const badge = (typeof c.n === 'number') ? `<span class="look-no">#${c.n}</span>` : `<span class="look-no">MIX</span>`;
   return `<div class="look">
@@ -394,7 +467,10 @@ function lookCardHTML(c, note, pfx){
         <div class="look-scene">${esc(c.s)}</div>
         <div class="look-title">${esc(c.t)}${badge}</div>
       </div>
-      <button class="savb ${saved?'on':''}" data-n="${c.n}" onclick="toggleBoard('${c.n}')">${saved?'★ 保存済み':'☆ 保存'}</button>
+      <div class="acts">
+        <button class="savb ${saved?'on':''}" data-n="${c.n}" onclick="toggleBoard('${c.n}')">${saved?'★ 保存済み':'☆ 保存'}</button>
+        <button class="savb shareb" onclick="shareLook('${c.n}')" title="リンクを共有">🔗</button>
+      </div>
     </div>
     <div class="illus" id="cillus-${pfx}-${c.n}"><div class="mini-loader"></div></div>
     <div class="look-body">
@@ -420,6 +496,62 @@ function toggleBoard(n){
   });
   if(document.getElementById('board-view').style.display !== 'none') renderBoard();
 }
+/* ---------- B: シェアURL（1本を完全再現・共有） ---------- */
+function showToast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(showToast._t); showToast._t = setTimeout(() => t.classList.remove('on'), 1900); }
+function shareUrl(o){
+  const base = location.origin + location.pathname;
+  const q = (typeof o.n === 'number') ? ('look=' + o.n) : ('ids=' + comboPieces(o).join(','));
+  return base + '?' + q + '&g=' + gender + '&h=' + curHeight();
+}
+function shareLook(n){
+  const o = LOOKS[n]; if(!o) return;
+  const url = shareUrl(o);
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(() => showToast('リンクをコピーしました'), () => prompt('このリンクを共有：', url));
+  } else prompt('このリンクを共有：', url);
+}
+function inferFam(ids){
+  const tally = {};
+  ids.forEach(id => (IMAP[id] ? IMAP[id].m.tg : []).forEach(t => { tally[t] = (tally[t] || 0) + 1; }));
+  const top = Object.entries(tally).sort((a,b) => b[1]-a[1])[0];
+  return top ? top[0] : 'cl';
+}
+function outfitFromIds(ids){
+  const by = c => ids.filter(id => id.slice(0,2) === c);
+  const tops = by('SH').concat(by('TS')).concat(by('SW'));
+  const o = { i: tops.length ? tops : ['TS-01'],
+    o: by('OU')[0] || null, p: by('PT')[0] || 'PT-01', f: by('FT')[0] || 'FT-01',
+    b: by('BG')[0] || 'BG-06', x: by('CP').concat(by('AC')).slice(0,2) };
+  const fam = inferFam(comboPieces(o));
+  o.n = 'm' + hash32(comboPieces(o).join('|')).toString(36);
+  o.s = FAM_LABEL[fam] + ' · 共有';
+  o.t = '共有されたコーデ';
+  o._why = describeOutfit(o, fam, 1, null);
+  return o;
+}
+function parseShare(){
+  const q = new URLSearchParams(location.search);
+  if(q.get('g') === 'womens' || q.get('g') === 'mens') gender = q.get('g');
+  const h = parseInt(q.get('h'), 10); if(HEIGHTS[gender] && HEIGHTS[gender].includes(h)) heightBy[gender] = h;
+  let o = null;
+  if(q.get('look') && LOOKS[q.get('look')]) o = LOOKS[q.get('look')];
+  else if(q.get('ids')){ const ids = q.get('ids').split(',').filter(id => IMAP[id]); if(ids.length){ o = outfitFromIds(ids); registerLook(o); } }
+  return o;
+}
+function renderShared(o){
+  const el = document.getElementById('shared');
+  if(!o){ el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  el.innerHTML = `<button class="sb-close" onclick="closeShared()">閉じる ×</button>
+    <div class="sb-k">共有されたコーデ</div>
+    <div id="shared-card" style="margin-top:0.6rem"></div>`;
+  document.getElementById('shared-card').innerHTML = lookCardHTML(o, o._why || null, 'sh');
+  initLookImg(o.n, 'sh');
+}
+function closeShared(){ document.getElementById('shared').style.display = 'none';
+  history.replaceState(null, '', location.origin + location.pathname); }
+
 function renderBoard(){
   const a = getBoard();
   document.getElementById('board-count').textContent = a.length ? a.length + ' コーデ保存中' : '';
@@ -459,6 +591,10 @@ function genBtnHTML(n, pfx){
 function initLookImg(n, pfx){
   const box = document.getElementById('cillus-' + pfx + '-' + n);
   if(!box) return;
+  if(typeof LOOKS[n] === 'object' && LOOKS[n].photo){ // C: photo look — show stored image, never a generate button
+    if(LOOKS[n].img) setIllusImg(box, LOOKS[n].img, false, n, pfx);
+    return;
+  }
   const tok = box.__tok = (box.__tok || 0) + 1;
   const cached = lsGet(imgKey(n));
   if(cached){ setIllusImg(box, cached, true, n, pfx); return; }
@@ -471,7 +607,7 @@ function initLookImg(n, pfx){
   probe.src = bundledPath(n);
 }
 /* after a successful generation, refresh this look's box in every view */
-function refreshLookBoxes(n){ ['d','s','a','b','x','f'].forEach(p => initLookImg(n, p)); }
+function refreshLookBoxes(n){ ['d','s','a','b','x','f','sh'].forEach(p => initLookImg(n, p)); }
 
 /* ---- single-figure safety net ----
    The image model occasionally draws the outfit twice (two variants side by side)
@@ -591,7 +727,7 @@ async function genLookIllus(n, pfx){
         lsSet(imgKey(n), src);
       } catch(e){}
       setIllusImg(box, src, true, n, pfx);
-      ['d','s','a','b','x','f'].forEach(p => {
+      ['d','s','a','b','x','f','sh'].forEach(p => {
         if(p === pfx) return;
         const ob = document.getElementById('cillus-' + p + '-' + n);
         if(ob) setIllusImg(ob, src, true, n, p);
@@ -724,9 +860,57 @@ function synth(seedStr, adv, opts){
   outfit.n = 'm' + hash32(ids.join('|')).toString(36);
   outfit._fam = fam; outfit._adv = adv;
   outfit.s = FAM_LABEL[fam] + ' · ' + ADV_LABEL[adv];
-  outfit.t = (adv === 0 || !brk) ? '王道の' + FAM_LABEL[fam] + 'を、崩さず端正に。'
-           : FAM_LABEL[fam] + 'の王道に、' + iname(brk.id) + 'で一点だけ外した。';
+  outfit.t = (adv === 0 || !brk) ? '王道の' + FAM_LABEL[fam] + 'を、崩さず端正に'
+           : FAM_LABEL[fam] + 'の王道に、' + iname(brk.id) + 'で一点だけ外す';
+  outfit._why = describeOutfit(outfit, fam, adv, brk);
   return outfit;
+}
+
+/* ---- A: 文脈の深掘り（色構成／フォーマルの落差／外し を2〜3文で言語化） ---- */
+const COLJP = { wh:'ホワイト', bk:'ブラック', gy:'グレー', nv:'ネイビー', bl:'ブルー', dn:'デニム',
+  be:'ベージュ', br:'ブラウン', ol:'オリーブ', gr:'グリーン', rd:'レッド', cm:'キャメル', ec:'生成り', gd:'ゴールド' };
+function describeOutfit(o, fam, adv, brk){
+  const ids = comboPieces(o);
+  const rng = mulberry32(hash32('why-' + ids.join(',')));
+  const P = arr => arr[Math.floor(rng() * arr.length)];
+  const st = [...statementSet(ids)];
+  const hasDenim = ids.some(id => IMAP[id].m.col.includes('dn'));
+  const S = [];
+
+  // 1) 色構成
+  if(st.length === 0){
+    S.push(hasDenim
+      ? P(['色はデニムのブルーと、白・黒・グレーだけ。フォルムとサイズ感で見せる引き算。',
+           'デニム＋ノンカラーの潔い配色。色を足さない分、シルエットが物を言う。'])
+      : P(['白・黒・グレーのノンカラーでまとめ、色ではなくフォルムで語る。',
+           'モノトーンで統一。色を捨てるほど、素材と抜けの差が効いてくる。']));
+  } else if(st.length === 1){
+    S.push(P([COLJP[st[0]] + 'を効かせ色に一つだけ。差し色を絞るのがこなれの近道。',
+              '主役の色は' + COLJP[st[0]] + 'のみ。あとは基調色で受けて、視線を一点に集める。']));
+  } else {
+    S.push(st.map(c => COLJP[c]).join('×') + 'の' + st.length + '色構成。' +
+      P(['トーンを揃えれば、多色でも不思議と散らからない。',
+         '色の分量に強弱をつけて、うるさくならない配色に。']));
+  }
+
+  // 2) 外し or フォーマルの落差
+  const core = [o.i[o.i.length - 1], o.p, o.f].concat(o.o ? [o.o] : []).filter(id => IMAP[id]);
+  const fs = core.map(id => IMAP[id].m.f);
+  const maxF = Math.max(...fs), minF = Math.min(...fs);
+  const dressy = core.find(id => IMAP[id].m.f === maxF);
+  const casual = core.slice().reverse().find(id => IMAP[id].m.f === minF);
+  if(brk){
+    S.push(P(['全体の緊張を、' + iname(brk.id) + 'で一点だけほどく。崩しが一箇所だから品が残る。',
+              iname(brk.id) + 'を一点だけ外して、生真面目さを抜く。効かせるのは常に一箇所。']));
+  } else if(maxF - minF >= 2 && dressy !== casual){
+    S.push(P(['きちんとした' + iname(dressy) + 'を、' + iname(casual) + 'で一段くずす。上品と気楽の同居がちょうどいい。',
+              iname(dressy) + 'の端正さと、' + iname(casual) + 'の気楽さ。落差があるほど今っぽく見える。']));
+  } else if(adv === 0){
+    S.push('崩しは入れず、定石で端正に。まず“外さない”が土台になる。');
+  } else {
+    S.push('無理に外さず、素材とサイズ感で温度を作る一着。');
+  }
+  return S.join('');
 }
 
 let mixAdv = 1;
@@ -739,7 +923,7 @@ function renderMix(){
     seen.add(o.n); registerLook(o); outs.push(o);
   }
   document.querySelectorAll('#mix-adv .seg-btn').forEach(b => b.classList.toggle('on', +b.dataset.a === mixAdv));
-  document.getElementById('mix-cards').innerHTML = outs.map(o => lookCardHTML(o, null, 'x')).join('');
+  document.getElementById('mix-cards').innerHTML = outs.map(o => lookCardHTML(o, o._why, 'x')).join('');
   outs.forEach(o => initLookImg(o.n, 'x'));
 }
 function setMixAdv(a){ mixAdv = a; renderMix(); }
@@ -795,7 +979,7 @@ function renderFeature(){
   document.getElementById('feat-lead').textContent = theme.lead;
   document.getElementById('feat-now').style.display = (w === weekIndex()) ? 'none' : 'inline-flex';
   const picks = featurePicks(theme, w);
-  document.getElementById('feat-cards').innerHTML = picks.map(o => lookCardHTML(o, null, 'f')).join('');
+  document.getElementById('feat-cards').innerHTML = picks.map(o => lookCardHTML(o, o._why, 'f')).join('');
   picks.forEach(o => initLookImg(o.n, 'f'));
   const backs = [];
   for(let i = 1; i <= 8; i++){ const bw = w - i; if(bw < 0) break; backs.push(bw); }
@@ -873,7 +1057,9 @@ function renderItems(){
   document.getElementById('items-list').innerHTML = cats.map(cat => {
     const rows = CATALOG.filter(it => it.c === cat);
     return `<div class="cat-group"><div class="cat-title">${esc(cat)} — ${rows.length}</div>
-      <div class="item-grid">${rows.map(it => `<div class="item-chip"><span class="iid">${it.id}</span>${esc(it.n)}</div>`).join('')}</div></div>`;
+      <div class="item-grid">${rows.map(it => { const edu = EDU[it.id];
+        return `<div class="item-chip${edu?' has-edu':''}"><div class="ic-top"><span class="iid">${it.id}</span><span>${esc(it.n)}</span></div>${edu?`<div class="iedu">${esc(edu)}</div>`:''}</div>`;
+      }).join('')}</div></div>`;
   }).join('');
 }
 
@@ -1017,12 +1203,19 @@ function renderUserResults(d){
   document.getElementById('uitems').innerHTML = (d.items || []).map(it =>
     `<span class="chip"><b>${esc(it.category)}</b> ${esc(it.name)}・${esc(it.color)}</span>`).join('');
   document.getElementById('ulooks').innerHTML = (d.coordinates || []).map((c, i) => {
+    const pid = pidOf(c);
+    const prev = LOOKS[pid]; // preserve an already-generated/persisted image for the same look
+    registerLook({ photo:true, n:pid, scene:c.scene, title:c.title, comment:c.comment, use:c.use||[], add:c.add||[], img:(prev&&prev.img)||null });
+    const saved = isSaved(pid);
     const idxs = (c.use_indexes || []).filter(n => n >= 1 && n <= files.length);
     const refs = idxs.map(n => `<div class="ref"><img src="${files[n-1].url}"></div>`).join('');
     const tags = (c.use || []).map(u => `<span class="tag">${esc(u)}</span>`).join('')
       + (c.add || []).map(a => `<span class="tag ou">＋${esc(a)}</span>`).join('');
     return `<div class="look">
-      <div class="look-head"><div class="look-scene">${esc(c.scene)}</div><div class="look-title">${esc(c.title)}</div></div>
+      <div class="look-head">
+        <div class="lh-main"><div class="look-scene">${esc(c.scene)}</div><div class="look-title">${esc(c.title)}<span class="look-no">MINE</span></div></div>
+        <div class="acts"><button class="savb ${saved?'on':''}" data-n="${pid}" onclick="toggleBoard('${pid}')">${saved?'★ 保存済み':'☆ 保存'}</button></div>
+      </div>
       <div class="illus" id="uillus-${i}"><div class="mini-loader"></div></div>
       <div class="look-body">
         <p class="look-note">${esc(c.comment)}</p>
@@ -1077,6 +1270,10 @@ async function drawUserLook(c, i){
       try {
         if(lastSession && lastSession.looks[i]){ lastSession.looks[i].img = fin; persistLast(); }
       } catch(e){}
+      try { // C: attach the finished image to the saved-look registry (and to storage if already saved)
+        const pid = pidOf(c);
+        if(LOOKS[pid]){ LOOKS[pid].img = fin; if(isSaved(pid)) persistSpec(LOOKS[pid]); }
+      } catch(e){}
     };
     img.onerror = () => { box.innerHTML = '<div class="fail">画像を表示できませんでした</div>'; };
     img.src = src;
@@ -1091,7 +1288,9 @@ function esc(s){ return String(s == null ? '' : s).replace(/[&<>]/g, c => ({'&':
 function resetUpload(){ files = []; renderThumbs(); document.getElementById('note').value = ''; showView('setup'); }
 
 /* ---------- init ---------- */
-renderStyles(); refreshKeyUI(); renderItems(); pickGender(gender); showView('looks');
+renderStyles(); refreshKeyUI(); renderItems(); pickGender(gender);
+renderShared(parseShare());
+showView('looks');
 </script>
 </body>
 </html>
